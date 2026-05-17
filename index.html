@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>다도구 분양합니다</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<style>
+  :root {
+    --green: #2E7D52;
+    --green-light: #EAF4EE;
+    --green-pale: #F4FAF6;
+    --green-border: #C6E3D1;
+    --white: #FFFFFF;
+    --gray-100: #F0F0F0;
+    --gray-200: #E0E0E0;
+    --gray-400: #9E9E9E;
+    --gray-600: #555555;
+    --gray-800: #222222;
+    --black: #111111;
+    --font: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font);
+    letter-spacing: 0;
+    background: var(--white);
+    color: var(--black);
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(255,255,255,0.93);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--gray-100);
+    padding: 0 20px; height: 56px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .topbar-brand { font-size: 17px; font-weight: 700; color: var(--green); }
+  .topbar-count { font-size: 12px; color: var(--gray-400); font-weight: 400; }
+
+  /* ── HERO ── */
+  .hero {
+    background: var(--green); padding: 44px 24px 40px;
+    position: relative; overflow: hidden;
+  }
+  .hero::after {
+    content: '茶'; position: absolute; right: -12px; bottom: -30px;
+    font-size: 160px; color: rgba(255,255,255,0.06);
+    font-weight: 700; line-height: 1; user-select: none;
+  }
+  .hero-tag {
+    display: inline-block; background: rgba(255,255,255,0.18);
+    color: rgba(255,255,255,0.9); font-size: 11px; font-weight: 500;
+    letter-spacing: 0.05em; padding: 4px 10px;
+    border-radius: 100px; margin-bottom: 16px; text-transform: uppercase;
+  }
+  .hero h1 { font-size: 30px; font-weight: 700; color: #fff; line-height: 1.3; margin-bottom: 10px; }
+  .hero p { font-size: 14px; color: rgba(255,255,255,0.72); font-weight: 400; line-height: 1.7; margin-bottom: 28px; }
+  .hero-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .hero-chip {
+    background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.25);
+    color: rgba(255,255,255,0.9); font-size: 12px; font-weight: 500;
+    padding: 6px 14px; border-radius: 100px;
+  }
+
+  /* ── NOTICE ── */
+  .notice-banner {
+    margin: 16px 20px 0; background: var(--green-pale);
+    border: 1px solid var(--green-border); border-radius: var(--radius-sm);
+    padding: 12px 16px; display: flex; gap: 10px; align-items: flex-start;
+  }
+  .notice-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .notice-text { font-size: 13px; color: var(--green); font-weight: 500; line-height: 1.6; }
+
+  /* ── FILTER ── */
+  .filter-wrap {
+    padding: 20px 20px 0; display: flex; gap: 8px;
+    overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none;
+  }
+  .filter-wrap::-webkit-scrollbar { display: none; }
+  .filter-btn {
+    flex-shrink: 0; padding: 8px 18px; border-radius: 100px;
+    border: 1.5px solid var(--gray-200); background: var(--white);
+    color: var(--gray-600); font-family: var(--font);
+    font-size: 13px; font-weight: 500; cursor: pointer;
+    transition: all 0.2s; white-space: nowrap;
+  }
+  .filter-btn.active { background: var(--green); border-color: var(--green); color: #fff; }
+
+  /* ── ITEMS ── */
+  .items-wrap { padding: 16px 20px 100px; display: flex; flex-direction: column; gap: 14px; }
+
+  .item-card {
+    background: var(--white); border: 1.5px solid var(--gray-100);
+    border-radius: var(--radius); overflow: hidden;
+    cursor: pointer; transition: box-shadow 0.2s, transform 0.15s;
+    animation: fadeUp 0.4s ease both;
+  }
+  .item-card:active { transform: scale(0.985); }
+  .item-card:not(.sold):hover { box-shadow: 0 4px 20px rgba(46,125,82,0.12); border-color: var(--green-border); }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+
+  /* Card thumbnail (photo strip) */
+  .card-thumb {
+    width: 100%; aspect-ratio: 16/9; overflow: hidden;
+    background: var(--green-pale); position: relative;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .card-thumb img {
+    width: 100%; height: 100%; object-fit: cover;
+    display: block; transition: transform 0.3s;
+  }
+  .item-card:not(.sold):hover .card-thumb img { transform: scale(1.03); }
+  .card-thumb-emoji { font-size: 48px; }
+  .card-thumb-count {
+    position: absolute; bottom: 10px; right: 10px;
+    background: rgba(0,0,0,0.55); color: #fff;
+    font-size: 12px; font-weight: 600; padding: 3px 9px;
+    border-radius: 100px; display: flex; align-items: center; gap: 4px;
+  }
+  .item-card.sold .card-thumb { filter: grayscale(0.7); opacity: 0.7; }
+
+  .item-inner { display: flex; gap: 16px; padding: 14px 16px; align-items: flex-start; }
+  .item-info { flex: 1; min-width: 0; }
+  .item-top { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 4px; }
+  .item-category { font-size: 11px; font-weight: 600; color: var(--green); letter-spacing: 0.02em; text-transform: uppercase; }
+  .status-badge { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 100px; flex-shrink: 0; }
+  .status-badge.sale     { background: var(--green-light); color: var(--green); }
+  .status-badge.reserved { background: #FFF3CD; color: #856404; }
+  .status-badge.sold     { background: var(--gray-100); color: var(--gray-400); }
+  .item-name { font-size: 16px; font-weight: 700; color: var(--black); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .item-card.sold .item-name { color: var(--gray-400); }
+  .item-desc { font-size: 13px; color: var(--gray-600); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .item-footer { padding: 12px 16px; border-top: 1px solid var(--gray-100); display: flex; align-items: center; justify-content: space-between; }
+  .item-price { font-size: 18px; font-weight: 700; color: var(--black); }
+  .item-price .won { font-size: 14px; font-weight: 500; color: var(--gray-600); }
+  .item-card.sold .item-price { color: var(--gray-400); }
+  .item-arrow { font-size: 18px; color: var(--gray-400); }
+
+  /* ── PHOTO CAROUSEL (in sheet) ── */
+  .carousel-wrap {
+    position: relative; width: 100%; aspect-ratio: 4/3;
+    background: #111; overflow: hidden; user-select: none;
+  }
+  .carousel-track {
+    display: flex; height: 100%;
+    transition: transform 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    will-change: transform;
+  }
+  .carousel-slide {
+    flex: 0 0 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .carousel-slide img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+    pointer-events: none;
+  }
+  .carousel-slide-empty {
+    flex: 0 0 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--green-pale); font-size: 72px;
+  }
+  .carousel-btn {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    width: 36px; height: 36px; border-radius: 50%;
+    background: rgba(255,255,255,0.9); border: none;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; cursor: pointer; z-index: 2;
+    transition: background 0.2s, opacity 0.2s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  }
+  .carousel-btn:hover { background: #fff; }
+  .carousel-btn.prev { left: 12px; }
+  .carousel-btn.next { right: 12px; }
+  .carousel-btn:disabled { opacity: 0.3; cursor: default; }
+  .carousel-counter {
+    position: absolute; bottom: 12px; right: 14px;
+    background: rgba(0,0,0,0.55); color: #fff;
+    font-size: 12px; font-weight: 600; padding: 3px 10px;
+    border-radius: 100px;
+  }
+  .carousel-dots {
+    position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 5px; align-items: center;
+  }
+  .c-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: rgba(255,255,255,0.45);
+    transition: all 0.2s; flex-shrink: 0;
+  }
+  .c-dot.on { background: #fff; width: 18px; border-radius: 3px; }
+
+  /* No-photo placeholder */
+  .no-photo-wrap {
+    width: 100%; aspect-ratio: 4/3;
+    background: var(--green-pale);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 10px;
+  }
+  .no-photo-emoji { font-size: 64px; }
+  .no-photo-label { font-size: 13px; color: var(--gray-400); font-weight: 500; }
+
+  /* ── INFO SECTION ── */
+  .info-section { margin: 0 20px 20px; border-radius: var(--radius); overflow: hidden; border: 1.5px solid var(--gray-100); }
+  .info-section-title {
+    padding: 14px 16px 12px;
+    font-size: 13px; font-weight: 700; color: var(--green);
+    border-bottom: 1px solid var(--gray-100);
+  }
+  .info-panel { padding: 16px; }
+  .info-panel.active { display: block; }
+  .info-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .info-list li { font-size: 13px; color: var(--gray-600); line-height: 1.7; padding-left: 14px; position: relative; }
+  .info-list li::before { content: ''; position: absolute; left: 0; top: 9px; width: 4px; height: 4px; border-radius: 50%; background: var(--green); }
+
+  /* ── INQUIRY SECTION ── */
+  .inquiry-section {
+    margin: 0 20px 20px; background: var(--green-pale);
+    border: 1.5px solid var(--green-border); border-radius: var(--radius);
+    padding: 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  }
+  .inquiry-section-text p:first-child { font-size: 14px; font-weight: 700; color: var(--black); margin-bottom: 3px; }
+  .inquiry-section-text p:last-child { font-size: 12px; color: var(--gray-600); }
+  .inquiry-section-btn {
+    flex-shrink: 0; height: 40px; padding: 0 18px;
+    background: var(--green); color: #fff; border: none;
+    border-radius: var(--radius-sm); font-family: var(--font);
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    white-space: nowrap; transition: background 0.2s;
+  }
+  .inquiry-section-btn:active { background: #246644; }
+
+  /* ── FOOTER ── */
+  .page-footer { padding: 24px 20px 40px; border-top: 1px solid var(--gray-100); }
+  .page-footer p { font-size: 12px; color: var(--gray-400); margin-bottom: 4px; }
+
+  /* ── BOTTOM BAR ── */
+  .bottom-bar {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 480px;
+    padding: 12px 20px calc(12px + env(safe-area-inset-bottom));
+    background: rgba(255,255,255,0.96); backdrop-filter: blur(12px);
+    border-top: 1px solid var(--gray-100); z-index: 50; display: none;
+  }
+  .bottom-bar-btn {
+    width: 100%; height: 52px; background: var(--green); color: #fff;
+    border: none; border-radius: var(--radius-sm); font-family: var(--font);
+    font-size: 15px; font-weight: 700; cursor: pointer; transition: background 0.2s;
+  }
+  .bottom-bar-btn:active { background: #246644; }
+
+  /* ── SHEET ── */
+  .sheet-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+    z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+  }
+  .sheet-overlay.open { opacity: 1; pointer-events: all; }
+  .sheet {
+    position: fixed; bottom: 0; left: 50%; transform: translate(-50%, 100%);
+    width: 100%; max-width: 480px; background: var(--white);
+    border-radius: 20px 20px 0 0; z-index: 201;
+    max-height: 92vh; overflow-y: auto;
+    transition: transform 0.35s cubic-bezier(0.32,0.72,0,1);
+    overscroll-behavior: contain;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .sheet-overlay.open .sheet { transform: translate(-50%, 0); }
+  .sheet-handle { display: flex; justify-content: center; padding: 12px 0 4px; }
+  .handle-bar { width: 36px; height: 4px; border-radius: 2px; background: var(--gray-200); }
+  .sheet-header { padding: 8px 20px 16px; border-bottom: 1px solid var(--gray-100); }
+  .sheet-close {
+    float: right; background: var(--gray-100); border: none;
+    width: 28px; height: 28px; border-radius: 50%; font-size: 15px;
+    color: var(--gray-600); cursor: pointer;
+    display: flex; align-items: center; justify-content: center; margin-top: 2px;
+  }
+  .sheet-title { font-size: 18px; font-weight: 700; color: var(--black); margin-bottom: 3px; padding-right: 40px; }
+  .sheet-subtitle { font-size: 13px; color: var(--gray-400); }
+  .sheet-body { padding: 0 0 20px; }
+
+  /* Detail rows */
+  .detail-rows { padding: 4px 20px 16px; }
+  .detail-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 11px 0; border-bottom: 1px solid var(--gray-100); gap: 16px; }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-label { font-size: 13px; color: var(--gray-400); font-weight: 500; flex-shrink: 0; width: 100px; }
+  .detail-value { font-size: 13px; color: var(--gray-800); font-weight: 500; text-align: right; flex: 1; }
+
+  /* Btn row */
+  .btn-row { display: flex; gap: 10px; padding: 0 20px; margin-top: 4px; }
+  .btn-row .submit-btn, .btn-row .outline-btn { margin-top: 0; }
+
+  /* Account box */
+  .account-box {
+    background: var(--green-pale); border: 1.5px solid var(--green-border);
+    border-radius: var(--radius-sm); padding: 16px; margin: 0 20px 20px;
+  }
+  .account-box-title { font-size: 12px; font-weight: 600; color: var(--green); letter-spacing: 0.02em; text-transform: uppercase; margin-bottom: 10px; }
+  .account-line { display: flex; justify-content: space-between; font-size: 13px; color: var(--gray-800); margin-bottom: 6px; }
+  .account-line:last-of-type { margin-bottom: 0; }
+  .account-line strong { font-weight: 700; }
+  .account-copy-btn {
+    width: 100%; margin-top: 12px; height: 38px; background: var(--green-light);
+    color: var(--green); border: none; border-radius: 6px; font-family: var(--font);
+    font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s;
+  }
+  .account-copy-btn:active { background: var(--green-border); }
+
+  /* Form */
+  .form-wrap { padding: 0 20px; }
+  .form-title { font-size: 15px; font-weight: 700; color: var(--black); margin-bottom: 14px; }
+  .form-group { margin-bottom: 14px; }
+  .form-label { display: block; font-size: 12px; font-weight: 600; color: var(--gray-600); margin-bottom: 6px; }
+  .form-input, .form-textarea {
+    width: 100%; padding: 13px 14px; border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius-sm); font-family: var(--font);
+    font-size: 14px; font-weight: 400; color: var(--black); background: var(--white);
+    outline: none; transition: border-color 0.2s; -webkit-appearance: none;
+  }
+  .form-input:focus, .form-textarea:focus { border-color: var(--green); }
+  .form-textarea { resize: none; height: 80px; line-height: 1.6; }
+  .form-price-display {
+    padding: 13px 14px; border: 1.5px solid var(--green-border);
+    border-radius: var(--radius-sm); background: var(--green-pale);
+    font-size: 14px; font-weight: 700; color: var(--green);
+  }
+  .submit-btn {
+    width: 100%; height: 52px; background: var(--green); color: #fff;
+    border: none; border-radius: var(--radius-sm); font-family: var(--font);
+    font-size: 15px; font-weight: 700; cursor: pointer; transition: background 0.2s; margin-top: 6px;
+  }
+  .submit-btn:active { background: #246644; }
+  .submit-btn:disabled { background: var(--gray-200); color: var(--gray-400); cursor: not-allowed; }
+  .outline-btn {
+    width: 100%; height: 52px; background: var(--white);
+    color: var(--green); border: 1.5px solid var(--green);
+    border-radius: var(--radius-sm); font-family: var(--font);
+    font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-top: 6px;
+  }
+  .outline-btn:active { background: var(--green-pale); }
+
+  /* Success */
+  .success-state { text-align: center; padding: 40px 20px; display: none; }
+  .success-icon { width: 64px; height: 64px; background: var(--green-light); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 30px; margin-bottom: 16px; }
+  .success-title { font-size: 20px; font-weight: 700; color: var(--black); margin-bottom: 8px; }
+  .success-desc { font-size: 14px; color: var(--gray-600); line-height: 1.7; margin-bottom: 28px; }
+  .success-close-btn { width: 100%; height: 52px; background: var(--green); color: #fff; border: none; border-radius: var(--radius-sm); font-family: var(--font); font-size: 15px; font-weight: 700; cursor: pointer; }
+
+  /* ── INSTAGRAM LINK ── */
+  .insta-link {
+    display: flex; align-items: center; gap: 12px;
+    background: #fff; border-radius: var(--radius-sm);
+    color: var(--green); font-size: 14px; font-weight: 700;
+    padding: 14px 18px; text-decoration: none;
+    margin-top: 20px; width: 100%;
+    transition: opacity 0.2s;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+  }
+  .insta-link:hover { opacity: 0.88; }
+  .insta-link-icon {
+    width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+    background: linear-gradient(135deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .insta-link-icon svg { width: 20px; height: 20px; color: #fff; }
+  .insta-link-text { flex: 1; }
+  .insta-link-text span:first-child { display: block; font-size: 11px; font-weight: 500; color: var(--gray-400); margin-bottom: 1px; }
+  .insta-link-text strong { font-size: 15px; font-weight: 700; color: var(--green); }
+  .insta-link-arrow { font-size: 18px; color: var(--gray-400); }
+
+  .footer-insta {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--green); font-size: 13px; font-weight: 600;
+    text-decoration: none; margin-top: 10px;
+    padding: 7px 14px; border: 1.5px solid var(--green-border);
+    border-radius: 100px; background: var(--green-pale);
+    transition: background 0.2s;
+  }
+  .footer-insta:hover { background: var(--green-light); }
+  .footer-insta svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+  /* ── ACCOUNT COLLAPSIBLE ── */
+  .pay-amount-box {
+    background: var(--green); border-radius: var(--radius-sm);
+    padding: 18px 20px; margin: 0 20px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .pay-amount-label { font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.75); margin-bottom: 4px; }
+  .pay-amount-value { font-size: 26px; font-weight: 700; color: #fff; }
+  .pay-amount-detail { font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 3px; }
+  .pay-amount-icon { font-size: 28px; opacity: 0.6; }
+
+  .account-toggle {
+    width: calc(100% - 40px); margin: 0 20px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--gray-100); border: none; border-radius: var(--radius-sm);
+    padding: 12px 16px; cursor: pointer; font-family: var(--font);
+    font-size: 13px; font-weight: 600; color: var(--gray-600);
+    transition: background 0.2s;
+  }
+  .account-toggle:hover { background: var(--gray-200); }
+  .account-toggle-arrow { transition: transform 0.25s; font-size: 11px; }
+  .account-toggle.open .account-toggle-arrow { transform: rotate(180deg); }
+
+  .account-detail-box {
+    background: var(--green-pale); border: 1.5px solid var(--green-border);
+    border-radius: var(--radius-sm); padding: 16px; margin: 0 20px 20px;
+    overflow: hidden; max-height: 0; opacity: 0;
+    transition: max-height 0.3s ease, opacity 0.25s ease, padding 0.3s ease;
+    padding-top: 0; padding-bottom: 0;
+  }
+  .account-detail-box.open {
+    max-height: 200px; opacity: 1;
+    padding-top: 16px; padding-bottom: 16px;
+  }
+  .account-line { display: flex; justify-content: space-between; font-size: 13px; color: var(--gray-800); margin-bottom: 8px; }
+  .account-line:last-of-type { margin-bottom: 0; }
+  .account-line strong { font-weight: 700; }
+  .account-copy-btn {
+    width: 100%; margin-top: 12px; height: 38px; background: var(--green-light);
+    color: var(--green); border: none; border-radius: 6px; font-family: var(--font);
+    font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s;
+  }
+  .account-copy-btn:active { background: var(--green-border); }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 90px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--black); color: #fff; font-family: var(--font);
+    font-size: 13px; font-weight: 500; padding: 10px 20px;
+    border-radius: 100px; opacity: 0; transition: all 0.3s;
+    pointer-events: none; white-space: nowrap; z-index: 300;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <span class="topbar-brand">🍵 다도구 분양</span>
+  <span class="topbar-count" id="itemCount"></span>
+</nav>
+
+<section class="hero">
+  <div class="hero-tag">Used Tea Wares</div>
+  <h1>다도구를<br>정리합니다.</h1>
+  <p>소중히 쓰던 물건들입니다.<br>쓰임새를 이어갈 분을 기다립니다.</p>
+  <div class="hero-chips">
+    <span class="hero-chip">택배 가능 (배송비 별도)</span>
+    <span class="hero-chip">직거래 가능 (문의)</span>
+    <span class="hero-chip">교환 및 환불은 불가합니다</span>
+  </div>
+  <a class="insta-link" href="https://instagram.com/sayuscene" target="_blank" rel="noopener">
+    <div class="insta-link-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+    </div>
+    <div class="insta-link-text">
+      <span>인스타그램</span>
+      <strong>@sayuscene</strong>
+    </div>
+    <span class="insta-link-arrow">›</span>
+  </a>
+</section>
+
+<div class="notice-banner">
+  <span class="notice-icon">💳</span>
+  <p class="notice-text">입금 계좌는 구매 신청 버튼을 누르시면 안내됩니다.</p>
+</div>
+
+<div class="filter-wrap">
+  <button class="filter-btn active" onclick="filterItems('all',this)">전체</button>
+  <button class="filter-btn" onclick="filterItems('다관',this)">다관·찻주전자</button>
+  <button class="filter-btn" onclick="filterItems('찻잔',this)">찻잔</button>
+  <button class="filter-btn" onclick="filterItems('도구',this)">도구·소품</button>
+</div>
+
+<div class="items-wrap" id="itemsWrap"></div>
+
+<div class="info-section">
+  <div class="info-section-title">안내 사항</div>
+  <div class="info-panel active" id="tab-guide">
+    <ul class="info-list">
+      <li>택배 거래는 착불 또는 선불 모두 가능합니다.</li>
+      <li>직거래는 협의 후 장소를 정합니다.</li>
+      <li>사진 추가 요청은 언제든지 환영합니다.</li>
+      <li>가격 흥정은 정중히 사양합니다.</li>
+      <li>입금 확인 후 발송을 진행합니다.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="inquiry-section">
+  <div class="inquiry-section-text">
+    <p>궁금한 점이 있으신가요?</p>
+    <p>사진 요청, 상태 문의 등 편하게 물어보세요.</p>
+  </div>
+  <button class="inquiry-section-btn" onclick="openInquirySheet()">💬 문의하기</button>
+</div>
+
+<footer class="page-footer">
+  <p>© 2026 sayuscene 중고 다구 판매 페이지</p>
+  <p>문의 전 상품 상세 내용을 꼭 확인해 주세요.</p>
+  <a class="footer-insta" href="https://instagram.com/sayuscene" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+    @sayuscene
+  </a>
+</footer>
+
+<div class="bottom-bar" id="bottomBar">
+  <button class="bottom-bar-btn" onclick="document.getElementById('itemsWrap').scrollIntoView({behavior:'smooth'})">
+    📦 판매 중인 물건 보기
+  </button>
+</div>
+
+<!-- SHEET -->
+<div class="sheet-overlay" id="sheetOverlay" onclick="handleOverlayClick(event)">
+  <div class="sheet" id="sheet">
+    <div class="sheet-handle"><div class="handle-bar"></div></div>
+    <div class="sheet-header">
+      <button class="sheet-close" onclick="closeSheet()">✕</button>
+      <div class="sheet-title" id="sheetTitle"></div>
+      <div class="sheet-subtitle" id="sheetSubtitle"></div>
+    </div>
+    <div class="sheet-body" id="sheetBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── 계좌 정보 ──────────────────────────────
+const ACCOUNT = { bank:'신한은행', number:'110-542-650840', holder:'사유(SAYU)' };
+
+// ── 보안: 이메일 주소 난독화 (소스 직접 노출 방지) ──
+const _e = atob('cWI2MjgwQGdtYWlsLmNvbQ==');
+function _ep(path='ajax') { return `https://formsubmit.co/${path}/${_e}`; }
+
+// ── 상품 데이터 ──────────────────────────────
+// photos: 최대 10장까지 이미지 URL을 넣어주세요. 없으면 [] 또는 빈 배열.
+const items = [
+  { id:1, category:'다관', name:'자사호 백니 소형', emoji:'🫖',
+    desc:'대만 백니 자사호입니다. 160ml 소용량으로 혼자 마시기 좋은 크기.',
+    price:38000, condition:4, status:'sale',
+    photos:[
+      'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=800&q=80',
+      'https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=800&q=80',
+      'https://images.unsplash.com/photo-1563822249366-3efb23b8ae99?w=800&q=80'],
+    details:[{l:'용량(cc)',v:'약 160cc'},{l:'작가 및 브랜드',v:'-'},{l:'구매처',v:'-'},{l:'기타',v:'뚜껑 마개 정상, 찻물 자국 있음'}] },
+
+  { id:2, category:'찻잔', name:'청화백자 찻잔 세트', emoji:'🍵',
+    desc:'청화 문양이 섬세한 백자 찻잔 2개 세트. 소박하고 단아한 스타일.',
+    price:22000, condition:5, status:'sale',
+    photos:[
+      'https://images.unsplash.com/photo-1565106430482-8f6e74349ca1?w=800&q=80',
+      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80'],
+    details:[{l:'용량(cc)',v:'-'},{l:'작가 및 브랜드',v:'-'},{l:'구매처',v:'-'},{l:'기타',v:'선물받은 것, 1~2회 사용'}] },
+
+  { id:3, category:'도구', name:'대나무 차측 세트', emoji:'🎋',
+    desc:'천연 대나무로 만든 차측 5종 세트. 찻잎 분배에 사용합니다.',
+    price:15000, condition:3, status:'sale',
+    photos:[],
+    details:[{l:'용량(cc)',v:'-'},{l:'작가 및 브랜드',v:'-'},{l:'구매처',v:'-'},{l:'기타',v:'일부 대나무 색 변화 있음'}] },
+
+  { id:4, category:'다관', name:'이싱 자사호 주니', emoji:'🫖',
+    desc:'이싱 주니 자사호. 220ml로 2~3인 사용에 적합합니다.',
+    price:65000, condition:4, status:'reserved',
+    photos:[
+      'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=800&q=80',
+      'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=800&q=80',
+      'https://images.unsplash.com/photo-1548438294-1ad5d5f4f063?w=800&q=80',
+      'https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=800&q=80'],
+    details:[{l:'용량(cc)',v:'약 220cc'},{l:'작가 및 브랜드',v:'-'},{l:'구매처',v:'-'},{l:'기타',v:'예약 중 — 취소 시 재판매 예정'}] },
+
+  { id:5, category:'찻잔', name:'분청사기 막사발', emoji:'🏺',
+    desc:'손으로 빚은 분청 막사발. 소박한 멋이 있는 작가 작품입니다.',
+    price:45000, condition:5, status:'sale',
+    photos:[
+      'https://images.unsplash.com/photo-1565106430482-8f6e74349ca1?w=800&q=80'],
+    details:[{l:'용량(cc)',v:'-'},{l:'작가 및 브랜드',v:'-'},{l:'구매처',v:'-'},{l:'기타',v:'작가 서명 있음'}] },
+
+  { id:6, category:'도구', name:'황동 차거름망 세트', emoji:'⚙️',
+    desc:'황동 재질 찻잎 거름망 2종 세트. 다관 위에 얹어 사용합니다.',
+    price:18000, condition:4, status:'sold',
+    photos:[],
+    details:[{l:'용량(cc)',v:'-'},{l:'작가 및 브랜드',v:'-'},{l:'구매처',v:'-'},{l:'기타',v:'판매 완료'}] }];
+
+let currentItem = null;
+
+// ── 렌더 헬퍼 ──────────────────────────────
+const statusBadge = s =>
+  s==='sold'     ? '<span class="status-badge sold">판매완료</span>' :
+  s==='reserved' ? '<span class="status-badge reserved">예약중</span>' :
+                   '<span class="status-badge sale">판매중</span>';
+
+const condDots = n =>
+  Array.from({length:5},(_,i)=>`<span class="cond-dot${i<n?' on':''}"></span>`).join('');
+
+// ── 카드 썸네일 ──────────────────────────────
+function cardThumb(item) {
+  const photos = (item.photos||[]).slice(0,10);
+  if (photos.length === 0) {
+    return `<div class="card-thumb"><span class="card-thumb-emoji">${item.emoji}</span></div>`;
+  }
+  const countBadge = photos.length > 1
+    ? `<span class="card-thumb-count">📷 ${photos.length}</span>` : '';
+  return `
+    <div class="card-thumb">
+      <img src="${photos[0]}" alt="${item.name}" loading="lazy"
+           onerror="this.parentElement.innerHTML='<span class=\\'card-thumb-emoji\\'>${item.emoji}</span>'">
+      ${countBadge}
+    </div>`;
+}
+
+// ── 아이템 렌더 ──────────────────────────────
+function renderItems(filter='all') {
+  const wrap = document.getElementById('itemsWrap');
+  const list = filter==='all' ? items : items.filter(i=>i.category===filter);
+  const saleCount = items.filter(i=>i.status==='sale').length;
+  document.getElementById('itemCount').textContent = `판매중 ${saleCount}점`;
+  wrap.innerHTML = list.map((item,idx) => `
+    <div class="item-card${item.status==='sold'?' sold':''}"
+         onclick="openDetail(${item.id})"
+         style="animation-delay:${idx*0.07}s">
+      ${cardThumb(item)}
+      <div class="item-inner">
+        <div class="item-info">
+          <div class="item-top">
+            <span class="item-category">${item.category}</span>
+            ${statusBadge(item.status)}
+          </div>
+          <div class="item-name">${item.name}</div>
+          <div class="item-desc">${item.desc}</div>
+        </div>
+      </div>
+      <div class="item-footer">
+        <div class="item-price">${item.price.toLocaleString()}<span class="won"> 원</span></div>
+        <span class="item-arrow">›</span>
+      </div>
+    </div>`).join('');
+}
+
+function filterItems(cat, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderItems(cat);
+}
+
+function switchTab(id, btn) {
+  document.querySelectorAll('.info-tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.info-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-'+id).classList.add('active');
+}
+
+// ── 사진 캐러셀 ──────────────────────────────
+let carouselIdx = 0;
+let carouselPhotos = [];
+let dragStartX = 0;
+let isDragging = false;
+let dragThreshold = 50;
+
+function buildCarousel(photos, emoji) {
+  if (!photos || photos.length === 0) {
+    return `<div class="no-photo-wrap"><span class="no-photo-emoji">${emoji}</span><span class="no-photo-label">등록된 사진이 없습니다</span></div>`;
+  }
+  carouselPhotos = photos.slice(0, 10);
+  carouselIdx = 0;
+  const slides = carouselPhotos.map((url, i) => `
+    <div class="carousel-slide">
+      <img src="${url}" alt="상품 사진 ${i+1}" loading="${i===0?'eager':'lazy'}"
+           onerror="this.parentElement.innerHTML='<span style=\\'font-size:60px;\\'>${emoji}</span>'">
+    </div>`).join('');
+  const dots = carouselPhotos.length > 1
+    ? `<div class="carousel-dots">${carouselPhotos.map((_,i)=>`<span class="c-dot${i===0?' on':''}"></span>`).join('')}</div>` : '';
+  const counter = carouselPhotos.length > 1
+    ? `<span class="carousel-counter" id="carouselCounter">1 / ${carouselPhotos.length}</span>` : '';
+  const prevBtn = carouselPhotos.length > 1
+    ? `<button class="carousel-btn prev" id="carouselPrev" onclick="moveCarousel(-1)" disabled>‹</button>` : '';
+  const nextBtn = carouselPhotos.length > 1
+    ? `<button class="carousel-btn next" id="carouselNext" onclick="moveCarousel(1)">›</button>` : '';
+
+  return `
+    <div class="carousel-wrap" id="carouselWrap">
+      <div class="carousel-track" id="carouselTrack">${slides}</div>
+      ${prevBtn}${nextBtn}${dots}${counter}
+    </div>`;
+}
+
+function moveCarousel(dir) {
+  const total = carouselPhotos.length;
+  if (total <= 1) return;
+  carouselIdx = Math.max(0, Math.min(total - 1, carouselIdx + dir));
+  updateCarousel();
+}
+
+function updateCarousel() {
+  const track = document.getElementById('carouselTrack');
+  if (track) track.style.transform = `translateX(-${carouselIdx * 100}%)`;
+
+  const counter = document.getElementById('carouselCounter');
+  if (counter) counter.textContent = `${carouselIdx + 1} / ${carouselPhotos.length}`;
+
+  const prev = document.getElementById('carouselPrev');
+  const next = document.getElementById('carouselNext');
+  if (prev) prev.disabled = carouselIdx === 0;
+  if (next) next.disabled = carouselIdx === carouselPhotos.length - 1;
+
+  document.querySelectorAll('.carousel-dots .c-dot').forEach((d,i) => {
+    d.classList.toggle('on', i === carouselIdx);
+  });
+}
+
+function initCarouselDrag() {
+  const wrap = document.getElementById('carouselWrap');
+  if (!wrap || carouselPhotos.length <= 1) return;
+
+  // Touch
+  wrap.addEventListener('touchstart', e => { dragStartX = e.touches[0].clientX; isDragging = true; }, {passive:true});
+  wrap.addEventListener('touchend', e => {
+    if (!isDragging) return;
+    const dx = e.changedTouches[0].clientX - dragStartX;
+    if (Math.abs(dx) > dragThreshold) moveCarousel(dx < 0 ? 1 : -1);
+    isDragging = false;
+  }, {passive:true});
+
+  // Mouse
+  wrap.addEventListener('mousedown', e => { dragStartX = e.clientX; isDragging = true; e.preventDefault(); });
+  wrap.addEventListener('mouseup', e => {
+    if (!isDragging) return;
+    const dx = e.clientX - dragStartX;
+    if (Math.abs(dx) > dragThreshold) moveCarousel(dx < 0 ? 1 : -1);
+    isDragging = false;
+  });
+  wrap.addEventListener('mouseleave', () => { isDragging = false; });
+}
+
+// ── 상세 시트 ──────────────────────────────
+function openDetail(id) {
+  currentItem = items.find(i=>i.id===id);
+  if (!currentItem) return;
+
+  document.getElementById('sheetTitle').textContent = currentItem.name;
+  document.getElementById('sheetSubtitle').textContent = currentItem.category + ' · ' + currentItem.price.toLocaleString() + '원';
+
+  const rows = currentItem.details.map(d=>`
+    <div class="detail-row">
+      <span class="detail-label">${d.l}</span>
+      <span class="detail-value">${d.v}</span>
+    </div>`).join('');
+
+  const carousel = buildCarousel(currentItem.photos, currentItem.emoji);
+
+  if (currentItem.status === 'sold') {
+    document.getElementById('sheetBody').innerHTML = `
+      ${carousel}
+      <div class="detail-rows">${rows}</div>
+      <div style="text-align:center;padding:4px 20px 16px;color:var(--gray-400);font-size:14px">판매가 완료된 상품입니다.</div>
+      <div class="btn-row">
+        <button class="outline-btn" onclick="openInquirySheet('${currentItem.name.replace(/'/g,"\\'")}')">💬 비슷한 물건 문의하기</button>
+      </div>`;
+  } else {
+    document.getElementById('sheetBody').innerHTML = `
+      ${carousel}
+      <div class="detail-rows">${rows}</div>
+      <div class="btn-row">
+        <button class="outline-btn" onclick="openInquirySheet('${currentItem.name.replace(/'/g,"\\'")}')">💬 문의</button>
+        <button class="submit-btn" onclick="openPurchaseForm()">💳 구매 신청</button>
+      </div>
+      <p style="font-size:12px;color:var(--gray-400);text-align:center;margin-top:10px;padding:0 20px">신청 후 계좌로 입금하시면 발송됩니다.</p>`;
+  }
+
+  document.getElementById('sheetOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(initCarouselDrag, 100);
+}
+
+// ── 구매 신청 ──────────────────────────────
+function openPurchaseForm() {
+  if (!currentItem) return;
+  const totalPrice = currentItem.price + 4000;
+  document.getElementById('sheetBody').innerHTML = `
+    <!-- 입금 금액 강조 -->
+    <div class="pay-amount-box">
+      <div>
+        <div class="pay-amount-label">총 입금 금액</div>
+        <div class="pay-amount-value">${totalPrice.toLocaleString()}원</div>
+        <div class="pay-amount-detail">상품 ${currentItem.price.toLocaleString()}원 + 배송비 4,000원</div>
+      </div>
+      <span class="pay-amount-icon">💸</span>
+    </div>
+
+    <!-- 계좌 정보 드롭다운 -->
+    <button class="account-toggle" id="accountToggle" onclick="toggleAccount()">
+      <span>계좌 정보 확인하기</span>
+      <span class="account-toggle-arrow">▼</span>
+    </button>
+    <div class="account-detail-box" id="accountDetailBox">
+      <div class="account-line"><span>은행</span><strong>${ACCOUNT.bank}</strong></div>
+      <div class="account-line"><span>계좌번호</span><strong>${ACCOUNT.number}</strong></div>
+      <div class="account-line"><span>예금주</span><strong>${ACCOUNT.holder}</strong></div>
+      <button class="account-copy-btn" onclick="copyAccount()">📋 계좌번호 복사</button>
+    </div>
+
+    <div class="form-wrap" id="formWrap">
+      <div class="form-title">구매 신청서 작성</div>
+      <div class="form-group">
+        <label class="form-label">구매 상품</label>
+        <div class="form-price-display">${currentItem.name} — ${currentItem.price.toLocaleString()}원 <span style="color:var(--gray-400);font-weight:500">+ 배송비 4,000원</span></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">이름 *</label>
+        <input class="form-input" id="f-name" type="text" placeholder="홍길동">
+      </div>
+      <div class="form-group">
+        <label class="form-label">연락처 *</label>
+        <input class="form-input" id="f-phone" type="tel" placeholder="010-0000-0000">
+      </div>
+      <div class="form-group">
+        <label class="form-label">배송 주소 *</label>
+        <input class="form-input" id="f-addr1" type="text" placeholder="도로명 주소" style="margin-bottom:8px">
+        <input class="form-input" id="f-addr2" type="text" placeholder="상세 주소 (동/호수 등)">
+      </div>
+      <div class="form-group">
+        <label class="form-label">메모 (선택)</label>
+        <textarea class="form-textarea" id="f-memo" placeholder="배송 요청사항 등"></textarea>
+      </div>
+      <button class="submit-btn" id="submitBtn" onclick="submitForm()">신청 완료</button>
+      <p style="font-size:12px;color:var(--gray-400);text-align:center;margin-top:10px;margin-bottom:4px">입금 확인 후 발송됩니다.</p>
+    </div>
+    <div class="success-state" id="successState">
+      <div class="success-icon">✅</div>
+      <div class="success-title">신청이 완료되었습니다!</div>
+      <div class="success-desc">구매 신청이 접수되었습니다.<br>위 계좌로 입금해 주시면<br>확인 후 빠르게 발송드리겠습니다. 🍵</div>
+      <button class="success-close-btn" onclick="closeSheet()">확인</button>
+    </div>`;
+  const sheet = document.getElementById('sheet');
+  sheet.scrollTop = 0;
+}
+
+function toggleAccount() {
+  const btn = document.getElementById('accountToggle');
+  const box = document.getElementById('accountDetailBox');
+  if (!btn || !box) return;
+  btn.classList.toggle('open');
+  box.classList.toggle('open');
+  btn.querySelector('span:first-child').textContent =
+    btn.classList.contains('open') ? '계좌 정보 닫기' : '계좌 정보 확인하기';
+}
+
+async function submitForm() {
+  const name  = (document.getElementById('f-name')?.value||'').trim();
+  const phone = (document.getElementById('f-phone')?.value||'').trim();
+  const addr1 = (document.getElementById('f-addr1')?.value||'').trim();
+  const addr2 = (document.getElementById('f-addr2')?.value||'').trim();
+  const memo  = (document.getElementById('f-memo')?.value||'').trim();
+  if (!name || !phone || !addr1) { showToast('이름, 연락처, 주소를 입력해 주세요.'); return; }
+  const totalPrice = currentItem.price + 4000;
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true; btn.textContent = '전송 중...';
+  try {
+    const res = await fetch(_ep('ajax'), {
+      method:'POST', headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body: JSON.stringify({ _subject:`[다도구 구매신청] ${currentItem.name} — ${name}`, 상품명:currentItem.name, 상품가격:currentItem.price.toLocaleString()+'원', 배송비:'4,000원', 총입금액:totalPrice.toLocaleString()+'원', 이름:name, 연락처:phone, 주소:(addr1+' '+addr2).trim(), 메모:memo||'없음', _template:'table' })
+    });
+    const data = await res.json();
+    if (data.success==='true'||data.success===true) { showSuccess(); return; }
+    throw new Error();
+  } catch {
+    const msg = `[다도구 구매신청]\n\n상품명: ${currentItem.name}\n상품가격: ${currentItem.price.toLocaleString()}원\n배송비: 4,000원\n총 입금액: ${totalPrice.toLocaleString()}원\n\n이름: ${name}\n연락처: ${phone}\n주소: ${(addr1+' '+addr2).trim()}\n메모: ${memo||'없음'}`;
+    window.location.href = 'mailto:'+_e+'?subject='+encodeURIComponent('[다도구 구매신청] '+currentItem.name+' — '+name)+'&body='+encodeURIComponent(msg);
+    showSuccess();
+  }
+}
+
+function showSuccess() {
+  const fw = document.getElementById('formWrap');
+  const ss = document.getElementById('successState');
+  if (fw) fw.style.display='none';
+  if (ss) ss.style.display='block';
+}
+
+// ── 문의하기 ──────────────────────────────
+function openInquirySheet(itemName='') {
+  document.getElementById('sheetTitle').textContent = '문의하기';
+  document.getElementById('sheetSubtitle').textContent = '사진 추가 요청, 상태 문의 등 편하게 남겨주세요.';
+  document.getElementById('sheetBody').innerHTML = `
+    <div class="form-wrap" id="inquiryFormWrap" style="padding-top:16px">
+      <div class="form-group">
+        <label class="form-label">문의 상품 (선택)</label>
+        <input class="form-input" id="i-item" type="text" placeholder="어떤 물건인지 알려주세요" value="${itemName}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">이름 *</label>
+        <input class="form-input" id="i-name" type="text" placeholder="홍길동">
+      </div>
+      <div class="form-group">
+        <label class="form-label">연락처 *</label>
+        <input class="form-input" id="i-phone" type="tel" placeholder="010-0000-0000">
+      </div>
+      <div class="form-group">
+        <label class="form-label">문의 내용 *</label>
+        <textarea class="form-textarea" id="i-msg" placeholder="궁금한 점을 자유롭게 적어주세요." style="height:100px"></textarea>
+      </div>
+      <button class="submit-btn" id="inquiryBtn" onclick="submitInquiry()">문의 보내기</button>
+      <p style="font-size:12px;color:var(--gray-400);text-align:center;margin-top:10px;margin-bottom:4px">최대한 빠르게 답변드리겠습니다.</p>
+    </div>
+    <div class="success-state" id="inquirySuccess">
+      <div class="success-icon">💬</div>
+      <div class="success-title">문의가 전달되었습니다!</div>
+      <div class="success-desc">확인 후 빠르게 연락드리겠습니다.<br>감사합니다 🍵</div>
+      <button class="success-close-btn" onclick="closeSheet()">확인</button>
+    </div>`;
+  document.getElementById('sheetOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+async function submitInquiry() {
+  const item  = (document.getElementById('i-item')?.value||'').trim();
+  const name  = (document.getElementById('i-name')?.value||'').trim();
+  const phone = (document.getElementById('i-phone')?.value||'').trim();
+  const msg   = (document.getElementById('i-msg')?.value||'').trim();
+  if (!name || !phone || !msg) { showToast('이름, 연락처, 문의 내용을 입력해 주세요.'); return; }
+  const btn = document.getElementById('inquiryBtn');
+  btn.disabled = true; btn.textContent = '전송 중...';
+  try {
+    const res = await fetch(_ep('ajax'), {
+      method:'POST', headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body: JSON.stringify({ _subject:`[다도구 문의] ${item||'일반 문의'} — ${name}`, 문의상품:item||'없음', 이름:name, 연락처:phone, 문의내용:msg, _template:'table' })
+    });
+    const data = await res.json();
+    if (data.success==='true'||data.success===true) { showInquirySuccess(); return; }
+    throw new Error();
+  } catch {
+    const body = `[다도구 문의]\n\n문의 상품: ${item||'없음'}\n이름: ${name}\n연락처: ${phone}\n\n문의 내용:\n${msg}`;
+    window.location.href = 'mailto:'+_e+'?subject='+encodeURIComponent('[다도구 문의] '+(item||'일반 문의')+' — '+name)+'&body='+encodeURIComponent(body);
+    showInquirySuccess();
+  }
+}
+
+function showInquirySuccess() {
+  const fw = document.getElementById('inquiryFormWrap');
+  const ss = document.getElementById('inquirySuccess');
+  if (fw) fw.style.display='none';
+  if (ss) ss.style.display='block';
+}
+
+// ── 공통 유틸 ──────────────────────────────
+function copyAccount() {
+  navigator.clipboard.writeText(ACCOUNT.number)
+    .then(()=>showToast('계좌번호가 복사되었습니다.'))
+    .catch(()=>showToast(ACCOUNT.number));
+}
+
+function closeSheet() {
+  document.getElementById('sheetOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+  currentItem = null; carouselIdx = 0; carouselPhotos = [];
+}
+
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('sheetOverlay')) closeSheet();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2500);
+}
+
+window.addEventListener('scroll', ()=>{
+  document.getElementById('bottomBar').style.display = window.scrollY > 200 ? 'block' : 'none';
+}, {passive:true});
+
+document.addEventListener('keydown', e => { if (e.key==='Escape') closeSheet(); });
+
+renderItems();
+</script>
+</body>
+</html>
