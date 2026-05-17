@@ -25,7 +25,6 @@
 
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html { scroll-behavior: smooth; }
-
   body {
     font-family: var(--font);
     letter-spacing: 0;
@@ -843,7 +842,7 @@ function openPurchaseForm() {
       </div>
       <div class="form-group">
         <label class="form-label">이름 *</label>
-        <input class="form-input" id="f-name" type="text" placeholder="홍길동">
+        <input class="form-input" id="adm_f_name" type="text" placeholder="홍길동">
       </div>
       <div class="form-group">
         <label class="form-label">연락처 *</label>
@@ -871,6 +870,24 @@ function openPurchaseForm() {
   sheet.scrollTop = 0;
 }
 
+function toggleEmojiPicker(e) {
+  e.stopPropagation();
+  const grid = document.getElementById('adm_emoji_grid');
+  if (!grid) return;
+  grid.style.display = grid.style.display === 'none' ? 'grid' : 'none';
+}
+function selectEmoji(emoji) {
+  document.getElementById('adm_f_emoji').value = emoji;
+  const btn = document.getElementById('adm_f_emoji_btn');
+  if (btn) btn.textContent = emoji;
+  const grid = document.getElementById('adm_emoji_grid');
+  if (grid) grid.style.display = 'none';
+}
+document.addEventListener('click', () => {
+  const grid = document.getElementById('adm_emoji_grid');
+  if (grid) grid.style.display = 'none';
+});
+
 function toggleAccount() {
   const btn = document.getElementById('accountToggle');
   const box = document.getElementById('accountDetailBox');
@@ -882,7 +899,7 @@ function toggleAccount() {
 }
 
 async function submitForm() {
-  const name  = (document.getElementById('f-name')?.value||'').trim();
+  const name  = (document.getElementById('adm_f_name')?.value||'').trim();
   const phone = (document.getElementById('f-phone')?.value||'').trim();
   const addr1 = (document.getElementById('f-addr1')?.value||'').trim();
   const addr2 = (document.getElementById('f-addr2')?.value||'').trim();
@@ -1007,6 +1024,21 @@ window.addEventListener('scroll', ()=>{
 
 document.addEventListener('keydown', e => { if (e.key==='Escape') closeSheet(); });
 
+// ── 우클릭 및 복사 방지 ──
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('selectstart', e => {
+  if (!e.target.closest('input, textarea, .adm-panel')) e.preventDefault();
+});
+document.addEventListener('copy', e => {
+  if (!e.target.closest('input, textarea, .adm-panel')) e.preventDefault();
+});
+document.addEventListener('keydown', e => {
+  // Ctrl+C, Ctrl+U(소스보기), Ctrl+S 방지
+  if (e.ctrlKey && ['c','u','s'].includes(e.key.toLowerCase())) {
+    if (!e.target.closest('input, textarea, .adm-panel')) e.preventDefault();
+  }
+});
+
 renderItems();
 </script>
 
@@ -1057,24 +1089,41 @@ renderItems();
     <!-- 상품 추가/수정 탭 -->
     <div class="adm-tab-content" id="adm-tab-form" style="display:none">
       <div class="adm-form-wrap">
-        <input type="hidden" id="editId">
-        <div class="adm-form-title" id="formHeading">새 상품 추가</div>
+        <input type="hidden" id="adm_editId">
+        <div class="adm-form-title" id="adm_formHeading">새 상품 추가</div>
 
         <div class="adm-field-row">
           <div class="adm-field">
             <label class="adm-label">상품명 *</label>
-            <input class="adm-input" id="f-name" placeholder="예: 자사호 백니 소형">
+            <input class="adm-input" id="adm_f_name" placeholder="예: 자사호 백니 소형">
           </div>
-          <div class="adm-field" style="max-width:120px">
+        <div class="adm-field" style="max-width:120px">
             <label class="adm-label">이모지</label>
-            <input class="adm-input" id="f-emoji" placeholder="🫖" maxlength="2">
+            <div class="adm-emoji-picker">
+              <button class="adm-emoji-selected" id="adm_f_emoji_btn" onclick="toggleEmojiPicker(event)" type="button">🫖</button>
+              <div class="adm-emoji-grid" id="adm_emoji_grid" style="display:none">
+                <span onclick="selectEmoji('🫖')">🫖</span>
+                <span onclick="selectEmoji('🍵')">🍵</span>
+                <span onclick="selectEmoji('🏺')">🏺</span>
+                <span onclick="selectEmoji('🎋')">🎋</span>
+                <span onclick="selectEmoji('⚙️')">⚙️</span>
+                <span onclick="selectEmoji('🌿')">🌿</span>
+                <span onclick="selectEmoji('🍶')">🍶</span>
+                <span onclick="selectEmoji('🥣')">🥣</span>
+                <span onclick="selectEmoji('🌸')">🌸</span>
+                <span onclick="selectEmoji('🪨')">🪨</span>
+                <span onclick="selectEmoji('🧺')">🧺</span>
+                <span onclick="selectEmoji('📦')">📦</span>
+              </div>
+            </div>
+            <input type="hidden" id="adm_f_emoji" value="🫖">
           </div>
         </div>
 
         <div class="adm-field-row">
           <div class="adm-field">
             <label class="adm-label">카테고리</label>
-            <select class="adm-input" id="f-category">
+            <select class="adm-input" id="adm_f_category">
               <option value="다관">다관·찻주전자</option>
               <option value="찻잔">찻잔</option>
               <option value="도구">도구·소품</option>
@@ -1082,7 +1131,7 @@ renderItems();
           </div>
           <div class="adm-field">
             <label class="adm-label">판매 상태</label>
-            <select class="adm-input" id="f-status">
+            <select class="adm-input" id="adm_f_status">
               <option value="sale">판매중</option>
               <option value="reserved">예약중</option>
               <option value="sold">판매완료</option>
@@ -1092,39 +1141,39 @@ renderItems();
 
         <div class="adm-field">
           <label class="adm-label">가격 (원) *</label>
-          <input class="adm-input" id="f-price" type="number" placeholder="38000">
+          <input class="adm-input" id="adm_f_price" type="number" placeholder="38000">
         </div>
 
         <div class="adm-field">
           <label class="adm-label">상품 설명</label>
-          <textarea class="adm-input adm-textarea" id="f-desc" placeholder="간단한 설명을 입력하세요."></textarea>
+          <textarea class="adm-input adm-textarea" id="adm_f_desc" placeholder="간단한 설명을 입력하세요."></textarea>
         </div>
 
         <div class="adm-field-row">
           <div class="adm-field">
             <label class="adm-label">용량(cc)</label>
-            <input class="adm-input" id="f-vol" placeholder="예: 160cc">
+            <input class="adm-input" id="adm_f_vol" placeholder="예: 160cc">
           </div>
           <div class="adm-field">
             <label class="adm-label">작가 및 브랜드</label>
-            <input class="adm-input" id="f-brand" placeholder="-">
+            <input class="adm-input" id="adm_f_brand" placeholder="-">
           </div>
         </div>
 
         <div class="adm-field-row">
           <div class="adm-field">
             <label class="adm-label">구매처</label>
-            <input class="adm-input" id="f-shop" placeholder="-">
+            <input class="adm-input" id="adm_f_shop" placeholder="-">
           </div>
           <div class="adm-field">
             <label class="adm-label">기타</label>
-            <input class="adm-input" id="f-note" placeholder="-">
+            <input class="adm-input" id="adm_f_note" placeholder="-">
           </div>
         </div>
 
         <div class="adm-field">
           <label class="adm-label">사진 URL (최대 10장)</label>
-          <div id="photoInputs"></div>
+          <div id="adm_photoInputs"></div>
         <button class="adm-add-photo-btn" onclick="addPhotoInput()">+ 사진 추가 (파일 업로드 또는 URL)</button>
         </div>
 
@@ -1301,6 +1350,16 @@ renderItems();
   transition: opacity 0.2s;
 }
 .adm-photo-upload-btn:hover { opacity: 0.7; }
+.adm-photo-handle {
+  font-size: 18px; color: var(--gray-200); cursor: grab;
+  flex-shrink: 0; user-select: none; padding: 0 2px;
+  transition: color 0.2s;
+}
+.adm-photo-row:hover .adm-photo-handle { color: var(--gray-400); }
+.adm-photo-row.photo-drag-over {
+  border-top: 2px solid var(--green);
+  background: var(--green-pale);
+}
 .adm-add-photo-btn {
   background: none; border: 1.5px dashed var(--gray-200);
   border-radius: var(--radius-sm); color: var(--gray-400);
@@ -1322,7 +1381,27 @@ renderItems();
   font-family: var(--font); font-size: 14px; font-weight: 600;
   color: var(--gray-600); cursor: pointer; white-space: nowrap;
 }
-.adm-empty {
+.adm-emoji-picker { position: relative; }
+.adm-emoji-selected {
+  width: 100%; height: 46px; font-size: 24px;
+  background: #fff; border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-sm); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: border-color 0.2s;
+}
+.adm-emoji-selected:hover { border-color: var(--green); }
+.adm-emoji-grid {
+  position: absolute; top: 52px; left: 0; z-index: 50;
+  background: #fff; border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-sm); padding: 8px;
+  display: grid; grid-template-columns: repeat(4,1fr); gap: 4px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12); width: 160px;
+}
+.adm-emoji-grid span {
+  font-size: 22px; text-align: center; padding: 6px 4px;
+  border-radius: 6px; cursor: pointer; transition: background 0.15s;
+}
+.adm-emoji-grid span:hover { background: var(--green-pale); }
   text-align: center; padding: 60px 20px;
   font-size: 14px; color: var(--gray-400);
 }
@@ -1469,35 +1548,37 @@ function onDragEnd() {
 // ── 수정 ──
 function editItem(idx) {
   const item = items[idx];
-  document.getElementById('editId').value = idx;
-  document.getElementById('f-name').value     = item.name||'';
-  document.getElementById('f-emoji').value    = item.emoji||'📦';
-  document.getElementById('f-category').value = item.category||'다관';
-  document.getElementById('f-status').value   = item.status||'sale';
-  document.getElementById('f-price').value    = item.price||'';
-  document.getElementById('f-desc').value     = item.desc||'';
+  document.getElementById('adm_editId').value = idx;
+  document.getElementById('adm_f_name').value     = item.name||'';
+  document.getElementById('adm_f_emoji').value    = item.emoji||'📦';
+  const emojiBtn = document.getElementById('adm_f_emoji_btn');
+  if (emojiBtn) emojiBtn.textContent = item.emoji||'📦';
+  document.getElementById('adm_f_category').value = item.category||'다관';
+  document.getElementById('adm_f_status').value   = item.status||'sale';
+  document.getElementById('adm_f_price').value    = item.price||'';
+  document.getElementById('adm_f_desc').value     = item.desc||'';
   const det = {};
   (item.details||[]).forEach(d=>det[d.l]=d.v);
-  document.getElementById('f-vol').value   = det['용량(cc)']||'';
-  document.getElementById('f-brand').value = det['작가 및 브랜드']||'';
-  document.getElementById('f-shop').value  = det['구매처']||'';
-  document.getElementById('f-note').value  = det['기타']||'';
+  document.getElementById('adm_f_vol').value   = det['용량(cc)']||'';
+  document.getElementById('adm_f_brand').value = det['작가 및 브랜드']||'';
+  document.getElementById('adm_f_shop').value  = det['구매처']||'';
+  document.getElementById('adm_f_note').value  = det['기타']||'';
   // 사진
-  const photoWrap = document.getElementById('photoInputs');
+  const photoWrap = document.getElementById('adm_photoInputs');
   photoWrap.innerHTML = '';
   (item.photos||[]).forEach(url=>addPhotoInput(url));
-  document.getElementById('formHeading').textContent = '상품 수정';
+  document.getElementById('adm_formHeading').textContent = '상품 수정';
   switchAdmTab('form');
   document.getElementById('adm-tab-form').scrollTop = 0;
 }
 
 // ── 삭제 ──
 function deleteItem(idx) {
-  if (!confirm(`"${items[idx].name}" 을(를) 삭제할까요?`)) return;
   items.splice(idx, 1);
   saveStoredItems(items);
   renderItems();
   renderAdmList();
+  showToast('삭제되었습니다.');
 }
 
 // ── 숨기기 토글 ──
@@ -1509,25 +1590,54 @@ function toggleHide(idx) {
 }
 
 // ── 사진 업로드 (파일 → base64 압축) ──
+let photoDragSrc = null;
+
 function addPhotoInput(src='') {
-  const wrap = document.getElementById('photoInputs');
+  const wrap = document.getElementById('adm_photoInputs');
   if (wrap.children.length >= 10) { alert('사진은 최대 10장까지 등록 가능합니다.'); return; }
-  const idx = wrap.children.length;
   const row = document.createElement('div');
   row.className = 'adm-photo-row';
-  row.dataset.idx = idx;
+  row.draggable = true;
   const preview = src
     ? `<img src="${src}" style="width:56px;height:56px;object-fit:cover;border-radius:6px;flex-shrink:0">`
     : `<div style="width:56px;height:56px;border-radius:6px;background:var(--gray-100);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--gray-400)">📷</div>`;
   row.innerHTML = `
+    <span class="adm-photo-handle" title="드래그로 순서변경">⠿</span>
     ${preview}
     <input type="file" accept="image/*" style="display:none" onchange="handlePhotoFile(this)">
     <input type="url" class="adm-input" placeholder="또는 이미지 URL 붙여넣기" value="${src.startsWith('data:')?'':src.replace(/"/g,'&quot;')}"
            oninput="handlePhotoUrl(this)" style="flex:1;margin:0">
     <button class="adm-photo-upload-btn" onclick="this.previousElementSibling.previousElementSibling.click()" title="파일 업로드">📁</button>
     <button class="adm-photo-del" onclick="this.parentElement.remove()" title="삭제">✕</button>`;
-  // If src is base64, store it in dataset
   if (src.startsWith('data:')) row.dataset.base64 = src;
+
+  // 드래그 이벤트
+  row.addEventListener('dragstart', e => {
+    photoDragSrc = row;
+    e.dataTransfer.effectAllowed = 'move';
+    setTimeout(() => row.style.opacity = '0.4', 0);
+  });
+  row.addEventListener('dragend', () => {
+    row.style.opacity = '';
+    wrap.querySelectorAll('.adm-photo-row').forEach(r => r.classList.remove('photo-drag-over'));
+  });
+  row.addEventListener('dragover', e => {
+    e.preventDefault();
+    if (photoDragSrc && photoDragSrc !== row) row.classList.add('photo-drag-over');
+  });
+  row.addEventListener('dragleave', () => row.classList.remove('photo-drag-over'));
+  row.addEventListener('drop', e => {
+    e.preventDefault();
+    row.classList.remove('photo-drag-over');
+    if (!photoDragSrc || photoDragSrc === row) return;
+    const rows = [...wrap.querySelectorAll('.adm-photo-row')];
+    const srcIdx = rows.indexOf(photoDragSrc);
+    const tgtIdx = rows.indexOf(row);
+    if (srcIdx < tgtIdx) wrap.insertBefore(photoDragSrc, row.nextSibling);
+    else wrap.insertBefore(photoDragSrc, row);
+    photoDragSrc = null;
+  });
+
   wrap.appendChild(row);
 }
 
@@ -1587,7 +1697,7 @@ function compressImage(dataUrl, maxWidth, quality, callback) {
 }
 
 function getPhotoSrcs() {
-  return Array.from(document.querySelectorAll('#photoInputs .adm-photo-row')).map(row => {
+  return Array.from(document.querySelectorAll('#adm_photoInputs .adm-photo-row')).map(row => {
     if (row.dataset.base64) return row.dataset.base64;
     const urlInput = row.querySelector('input[type="url"]');
     const val = urlInput ? urlInput.value.trim() : '';
@@ -1596,32 +1706,38 @@ function getPhotoSrcs() {
 }
 
 // ── 저장 ──
+let isSaving = false;
 function saveItem() {
-  const name  = document.getElementById('f-name').value.trim();
-  const price = parseInt(document.getElementById('f-price').value)||0;
+  if (isSaving) return;
+  const name  = document.getElementById('adm_f_name').value.trim();
+  const price = parseInt(document.getElementById('adm_f_price').value)||0;
   if (!name)  { alert('상품명을 입력해주세요.'); return; }
   if (!price) { alert('가격을 입력해주세요.'); return; }
+
+  isSaving = true;
+  const saveBtn = document.querySelector('.adm-form-btns .adm-btn-primary');
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '저장 중...'; }
 
   const photos = getPhotoSrcs();
 
   const newItem = {
     id: Date.now(),
     name,
-    emoji:    document.getElementById('f-emoji').value.trim()||'📦',
-    category: document.getElementById('f-category').value,
-    status:   document.getElementById('f-status').value,
+    emoji:    document.getElementById('adm_f_emoji').value.trim()||'📦',
+    category: document.getElementById('adm_f_category').value,
+    status:   document.getElementById('adm_f_status').value,
     price,
-    desc:     document.getElementById('f-desc').value.trim(),
+    desc:     document.getElementById('adm_f_desc').value.trim(),
     photos,
     details: [
-      {l:'용량(cc)',       v: document.getElementById('f-vol').value.trim()||'-'},
-      {l:'작가 및 브랜드', v: document.getElementById('f-brand').value.trim()||'-'},
-      {l:'구매처',         v: document.getElementById('f-shop').value.trim()||'-'},
-      {l:'기타',           v: document.getElementById('f-note').value.trim()||'-'},
+      {l:'용량(cc)',       v: document.getElementById('adm_f_vol').value.trim()||'-'},
+      {l:'작가 및 브랜드', v: document.getElementById('adm_f_brand').value.trim()||'-'},
+      {l:'구매처',         v: document.getElementById('adm_f_shop').value.trim()||'-'},
+      {l:'기타',           v: document.getElementById('adm_f_note').value.trim()||'-'},
     ]
   };
 
-  const editIdx = document.getElementById('editId').value;
+  const editIdx = document.getElementById('adm_editId').value;
   if (editIdx !== '') {
     items[parseInt(editIdx)] = newItem;
   } else {
@@ -1634,17 +1750,22 @@ function saveItem() {
   resetForm();
   switchAdmTab('list');
   showToast('저장되었습니다! ✅');
+  isSaving = false;
 }
 
 // ── 폼 초기화 ──
 function resetForm() {
-  document.getElementById('editId').value = '';
-  ['f-name','f-emoji','f-price','f-desc','f-vol','f-brand','f-shop','f-note']
-    .forEach(id=>{ document.getElementById(id).value=''; });
-  document.getElementById('f-category').value = '다관';
-  document.getElementById('f-status').value   = 'sale';
-  document.getElementById('photoInputs').innerHTML = '';
-  document.getElementById('formHeading').textContent = '새 상품 추가';
+  document.getElementById('adm_editId').value = '';
+  ['adm_f_name','adm_f_price','adm_f_desc','adm_f_vol','adm_f_brand','adm_f_shop','adm_f_note']
+    .forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('adm_f_category').value = '다관';
+  document.getElementById('adm_f_status').value   = 'sale';
+  document.getElementById('adm_f_emoji').value = '🫖';
+  const emojiBtn = document.getElementById('adm_f_emoji_btn');
+  if (emojiBtn) emojiBtn.textContent = '🫖';
+  const photoWrap = document.getElementById('adm_photoInputs');
+  if (photoWrap) photoWrap.innerHTML = '';
+  document.getElementById('adm_formHeading').textContent = '새 상품 추가';
 }
 
 // ── HTML 내보내기 ──
