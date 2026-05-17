@@ -551,7 +551,6 @@ const ACCOUNT = { bank:'신한은행', number:'110-542-650840', holder:'사유(S
 
 // ── 보안: 이메일 주소 난독화 (소스 직접 노출 방지) ──
 const _e = atob('cWI2MjgwQGdtYWlsLmNvbQ==');
-function _ep(path='ajax') { return `https://formsubmit.co/${path}/${_e}`; }
 
 // ── 기본 상품 데이터 (관리자 패널에서 수정 가능) ──
 const DEFAULT_ITEMS = [
@@ -898,29 +897,32 @@ function toggleAccount() {
     btn.classList.contains('open') ? '계좌 정보 닫기' : '계좌 정보 확인하기';
 }
 
-async function submitForm() {
-  const name  = (document.getElementById('adm_f_name')?.value||'').trim();
+function submitForm() {
+  const name  = (document.getElementById('f-name')?.value||'').trim();
   const phone = (document.getElementById('f-phone')?.value||'').trim();
   const addr1 = (document.getElementById('f-addr1')?.value||'').trim();
   const addr2 = (document.getElementById('f-addr2')?.value||'').trim();
   const memo  = (document.getElementById('f-memo')?.value||'').trim();
   if (!name || !phone || !addr1) { showToast('이름, 연락처, 주소를 입력해 주세요.'); return; }
   const totalPrice = currentItem.price + 4000;
-  const btn = document.getElementById('submitBtn');
-  btn.disabled = true; btn.textContent = '전송 중...';
-  try {
-    const res = await fetch(_ep('ajax'), {
-      method:'POST', headers:{'Content-Type':'application/json','Accept':'application/json'},
-      body: JSON.stringify({ _subject:`[다도구 구매신청] ${currentItem.name} — ${name}`, 상품명:currentItem.name, 상품가격:currentItem.price.toLocaleString()+'원', 배송비:'4,000원', 총입금액:totalPrice.toLocaleString()+'원', 이름:name, 연락처:phone, 주소:(addr1+' '+addr2).trim(), 메모:memo||'없음', _template:'table' })
-    });
-    const data = await res.json();
-    if (data.success==='true'||data.success===true) { showSuccess(); return; }
-    throw new Error();
-  } catch {
-    const msg = `[다도구 구매신청]\n\n상품명: ${currentItem.name}\n상품가격: ${currentItem.price.toLocaleString()}원\n배송비: 4,000원\n총 입금액: ${totalPrice.toLocaleString()}원\n\n이름: ${name}\n연락처: ${phone}\n주소: ${(addr1+' '+addr2).trim()}\n메모: ${memo||'없음'}`;
-    window.location.href = 'mailto:'+_e+'?subject='+encodeURIComponent('[다도구 구매신청] '+currentItem.name+' — '+name)+'&body='+encodeURIComponent(msg);
-    showSuccess();
-  }
+
+  const subject = '[다도구 구매신청] ' + currentItem.name + ' — ' + name;
+  const body = [
+    '■ 구매 신청서',
+    '',
+    '상품명: ' + currentItem.name,
+    '상품가격: ' + currentItem.price.toLocaleString() + '원',
+    '배송비: 4,000원',
+    '총 입금액: ' + totalPrice.toLocaleString() + '원',
+    '',
+    '이름: ' + name,
+    '연락처: ' + phone,
+    '주소: ' + (addr1 + ' ' + addr2).trim(),
+    '메모: ' + (memo || '없음'),
+  ].join('\n');
+
+  window.location.href = 'mailto:' + _e + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+  showSuccess();
 }
 
 function showSuccess() {
@@ -952,8 +954,8 @@ function openInquirySheet(itemName='') {
         <label class="form-label">문의 내용 *</label>
         <textarea class="form-textarea" id="i-msg" placeholder="궁금한 점을 자유롭게 적어주세요." style="height:100px"></textarea>
       </div>
-      <button class="submit-btn" id="inquiryBtn" onclick="submitInquiry()">문의 보내기</button>
-      <p style="font-size:12px;color:var(--gray-400);text-align:center;margin-top:10px;margin-bottom:4px">최대한 빠르게 답변드리겠습니다.</p>
+      <button class="submit-btn" id="inquiryBtn" onclick="submitInquiry()">📧 메일 앱으로 문의하기</button>
+      <p style="font-size:12px;color:var(--gray-400);text-align:center;margin-top:10px;margin-bottom:4px">메일 앱이 열리면 보내기를 눌러주세요.</p>
     </div>
     <div class="success-state" id="inquirySuccess">
       <div class="success-icon">💬</div>
@@ -965,27 +967,27 @@ function openInquirySheet(itemName='') {
   document.body.style.overflow = 'hidden';
 }
 
-async function submitInquiry() {
+function submitInquiry() {
   const item  = (document.getElementById('i-item')?.value||'').trim();
   const name  = (document.getElementById('i-name')?.value||'').trim();
   const phone = (document.getElementById('i-phone')?.value||'').trim();
   const msg   = (document.getElementById('i-msg')?.value||'').trim();
   if (!name || !phone || !msg) { showToast('이름, 연락처, 문의 내용을 입력해 주세요.'); return; }
-  const btn = document.getElementById('inquiryBtn');
-  btn.disabled = true; btn.textContent = '전송 중...';
-  try {
-    const res = await fetch(_ep('ajax'), {
-      method:'POST', headers:{'Content-Type':'application/json','Accept':'application/json'},
-      body: JSON.stringify({ _subject:`[다도구 문의] ${item||'일반 문의'} — ${name}`, 문의상품:item||'없음', 이름:name, 연락처:phone, 문의내용:msg, _template:'table' })
-    });
-    const data = await res.json();
-    if (data.success==='true'||data.success===true) { showInquirySuccess(); return; }
-    throw new Error();
-  } catch {
-    const body = `[다도구 문의]\n\n문의 상품: ${item||'없음'}\n이름: ${name}\n연락처: ${phone}\n\n문의 내용:\n${msg}`;
-    window.location.href = 'mailto:'+_e+'?subject='+encodeURIComponent('[다도구 문의] '+(item||'일반 문의')+' — '+name)+'&body='+encodeURIComponent(body);
-    showInquirySuccess();
-  }
+
+  const subject = '[다도구 문의] ' + (item||'일반 문의') + ' — ' + name;
+  const body = [
+    '■ 문의',
+    '',
+    '문의 상품: ' + (item||'없음'),
+    '이름: ' + name,
+    '연락처: ' + phone,
+    '',
+    '문의 내용:',
+    msg,
+  ].join('\n');
+
+  window.location.href = 'mailto:' + _e + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+  showInquirySuccess();
 }
 
 function showInquirySuccess() {
@@ -1548,27 +1550,29 @@ function onDragEnd() {
 // ── 수정 ──
 function editItem(idx) {
   const item = items[idx];
+  // 먼저 탭 전환 (내부에서 resetForm 호출됨)
+  switchAdmTab('form');
+
+  // resetForm 이후에 값 세팅해야 초기화 안됨
   document.getElementById('adm_editId').value = idx;
-  document.getElementById('adm_f_name').value     = item.name||'';
-  document.getElementById('adm_f_emoji').value    = item.emoji||'📦';
+  document.getElementById('adm_f_name').value      = item.name||'';
+  document.getElementById('adm_f_emoji').value     = item.emoji||'📦';
   const emojiBtn = document.getElementById('adm_f_emoji_btn');
   if (emojiBtn) emojiBtn.textContent = item.emoji||'📦';
-  document.getElementById('adm_f_category').value = item.category||'다관';
-  document.getElementById('adm_f_status').value   = item.status||'sale';
-  document.getElementById('adm_f_price').value    = item.price||'';
-  document.getElementById('adm_f_desc').value     = item.desc||'';
+  document.getElementById('adm_f_category').value  = item.category||'다관';
+  document.getElementById('adm_f_status').value    = item.status||'sale';
+  document.getElementById('adm_f_price').value     = item.price||'';
+  document.getElementById('adm_f_desc').value      = item.desc||'';
   const det = {};
   (item.details||[]).forEach(d=>det[d.l]=d.v);
   document.getElementById('adm_f_vol').value   = det['용량(cc)']||'';
   document.getElementById('adm_f_brand').value = det['작가 및 브랜드']||'';
   document.getElementById('adm_f_shop').value  = det['구매처']||'';
   document.getElementById('adm_f_note').value  = det['기타']||'';
-  // 사진
   const photoWrap = document.getElementById('adm_photoInputs');
   photoWrap.innerHTML = '';
   (item.photos||[]).forEach(url=>addPhotoInput(url));
   document.getElementById('adm_formHeading').textContent = '상품 수정';
-  switchAdmTab('form');
   document.getElementById('adm-tab-form').scrollTop = 0;
 }
 
