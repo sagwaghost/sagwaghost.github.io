@@ -1208,10 +1208,7 @@ function closeGform() { /* no-op */ }
 function hardRefresh() {
   const btn = document.querySelector('.topbar-refresh-btn');
   if (btn) btn.classList.add('spinning');
-  // 타임스탬프로 캐시 무력화 후 강제 새로고침
-  setTimeout(() => {
-    window.location.href = window.location.pathname + '?v=' + Date.now();
-  }, 300);
+  setTimeout(() => { window.location.reload(); }, 300);
 }
 
 function showToast(msg) {
