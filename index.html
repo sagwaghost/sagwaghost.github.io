@@ -545,6 +545,18 @@
 <div class="toast" id="toast"></div>
 
 <script>
+// ── 페이지 로드 시 관리자 패널 항상 강제 숨김 ──
+(function() {
+  const ids = ['adminPanel','adminOverlay','adminLoginBg','githubPanel'];
+  // DOM이 준비되기 전이므로 DOMContentLoaded로 처리
+  document.addEventListener('DOMContentLoaded', function() {
+    ids.forEach(function(id) {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+  });
+})();
+
 // ── 계좌 정보 ──────────────────────────────
 const ACCOUNT = { bank:'신한은행', number:'110-542-650840', holder:'사유(SAYU)' };
 
