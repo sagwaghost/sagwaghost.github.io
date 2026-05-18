@@ -1672,7 +1672,7 @@ async function sha256(str) {
 
 // ── 로그인 열기 ──
 function openAdminLogin() {
-  document.getElementById('adminOverlay').style.display = 'block';
+  document.getElementById('adminOverlay').classList.add('adm-open');
   document.getElementById('adminLoginBg').classList.add('adm-open');
   document.getElementById('adminPanel').classList.remove('adm-open');
   const hasHash = true;
@@ -1685,7 +1685,8 @@ function openAdminLogin() {
 }
 
 function closeAdminLogin() {
-  document.getElementById('adminOverlay').style.display = 'none';
+  document.getElementById('adminOverlay').classList.remove('adm-open');
+  document.getElementById('adminLoginBg').classList.remove('adm-open');
   document.body.style.overflow = '';
 }
 
@@ -1725,7 +1726,7 @@ function openAdminPanel() {
 
 function logoutAdmin() {
   sessionStorage.removeItem(ADM_SESSION);
-  document.getElementById('adminOverlay').style.display = 'none';
+  document.getElementById('adminOverlay').classList.remove('adm-open');
   document.body.style.overflow = '';
 }
 
