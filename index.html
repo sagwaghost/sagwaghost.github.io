@@ -1748,7 +1748,7 @@ function handlePhotoFile(input) {
   const file = input.files[0];
   const reader = new FileReader();
   reader.onload = e => {
-    compressImage(e.target.result, 1200, 0.82, compressed => {
+    compressImage(e.target.result, 900, 0.72, compressed => {
       row.dataset.base64 = compressed;
       // update preview
       let img = row.querySelector('img');
@@ -1803,39 +1803,53 @@ function saveItem() {
   const saveBtn = document.querySelector('.adm-form-btns .adm-btn-primary');
   if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '저장 중...'; }
 
-  const photos = getPhotoSrcs();
+  try {
+    const photos = getPhotoSrcs();
+    const newItem = {
+      id: Date.now(),
+      name,
+      emoji:    document.getElementById('adm_f_emoji').value.trim()||'📦',
+      category: document.getElementById('adm_f_category').value,
+      status:   document.getElementById('adm_f_status').value,
+      price,
+      desc:     document.getElementById('adm_f_desc').value.trim(),
+      photos,
+      details: [
+        {l:'용량(cc)',       v: document.getElementById('adm_f_vol').value.trim()||'-'},
+        {l:'작가 및 브랜드', v: document.getElementById('adm_f_brand').value.trim()||'-'},
+        {l:'구매처',         v: document.getElementById('adm_f_shop').value.trim()||'-'},
+        {l:'기타',           v: document.getElementById('adm_f_note').value.trim()||'-'},
+      ]
+    };
 
-  const newItem = {
-    id: Date.now(),
-    name,
-    emoji:    document.getElementById('adm_f_emoji').value.trim()||'📦',
-    category: document.getElementById('adm_f_category').value,
-    status:   document.getElementById('adm_f_status').value,
-    price,
-    desc:     document.getElementById('adm_f_desc').value.trim(),
-    photos,
-    details: [
-      {l:'용량(cc)',       v: document.getElementById('adm_f_vol').value.trim()||'-'},
-      {l:'작가 및 브랜드', v: document.getElementById('adm_f_brand').value.trim()||'-'},
-      {l:'구매처',         v: document.getElementById('adm_f_shop').value.trim()||'-'},
-      {l:'기타',           v: document.getElementById('adm_f_note').value.trim()||'-'},
-    ]
-  };
+    const editIdx = document.getElementById('adm_editId').value;
+    if (editIdx !== '') {
+      items[parseInt(editIdx)] = newItem;
+    } else {
+      items.push(newItem);
+    }
 
-  const editIdx = document.getElementById('adm_editId').value;
-  if (editIdx !== '') {
-    items[parseInt(editIdx)] = newItem;
-  } else {
-    items.push(newItem);
+    saveStoredItems(items);
+    renderItems();
+    renderAdmList();
+    resetForm();
+    switchAdmTab('list');
+    showToast('저장되었습니다! ✅');
+
+  } catch(err) {
+    // localStorage 용량 초과 처리
+    if (err.name === 'QuotaExceededError' || err.code === 22) {
+      alert('저장 용량이 초과되었습니다.\n\n사진을 줄이거나, 기존 상품의 사진을 삭제한 후 다시 시도해주세요.\n\nTip: 사진이 많으면 URL 방식을 사용하면 용량 문제가 없어요.');
+      // 방금 추가한 항목 롤백
+      const editIdx = document.getElementById('adm_editId').value;
+      if (editIdx === '') items.pop();
+    } else {
+      alert('저장 중 오류가 발생했습니다. 다시 시도해주세요.\n' + err.message);
+    }
+  } finally {
+    isSaving = false;
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '저장하기'; }
   }
-
-  saveStoredItems(items);
-  renderItems();
-  renderAdmList();
-  resetForm();
-  switchAdmTab('list');
-  showToast('저장되었습니다! ✅');
-  isSaving = false;
 }
 
 // ── 폼 초기화 ──
