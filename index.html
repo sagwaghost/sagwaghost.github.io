@@ -463,6 +463,15 @@
     pointer-events: none; white-space: nowrap; z-index: 300;
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ── 관리자 패널 강제 숨김 (inline style 무관하게 항상 적용) ── */
+  #adminPanel, #adminOverlay, #adminLoginBg, #githubPanel {
+    display: none !important;
+  }
+  #adminPanel.adm-open   { display: flex  !important; }
+  #adminOverlay.adm-open { display: block !important; }
+  #adminLoginBg.adm-open { display: flex  !important; }
+  #githubPanel.adm-open  { display: block !important; }
 </style>
 </head>
 <body>
@@ -545,18 +554,6 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ── 페이지 로드 시 관리자 패널 항상 강제 숨김 ──
-(function() {
-  const ids = ['adminPanel','adminOverlay','adminLoginBg','githubPanel'];
-  // DOM이 준비되기 전이므로 DOMContentLoaded로 처리
-  document.addEventListener('DOMContentLoaded', function() {
-    ids.forEach(function(id) {
-      const el = document.getElementById(id);
-      if (el) el.style.display = 'none';
-    });
-  });
-})();
-
 // ── 계좌 정보 ──────────────────────────────
 const ACCOUNT = { bank:'신한은행', number:'110-542-650840', holder:'사유(SAYU)' };
 
@@ -1673,8 +1670,8 @@ async function sha256(str) {
 // ── 로그인 열기 ──
 function openAdminLogin() {
   document.getElementById('adminOverlay').style.display = 'block';
-  document.getElementById('adminLoginBg').style.display = 'flex';
-  document.getElementById('adminPanel').style.display = 'none';
+  document.getElementById('adminLoginBg').classList.add('adm-open');
+  document.getElementById('adminPanel').classList.remove('adm-open');
   const hasHash = true;
   document.getElementById('loginTitle').textContent = '관리자 로그인';
   document.getElementById('loginSub').textContent   = '비밀번호를 입력해주세요.';
@@ -1717,8 +1714,8 @@ async function submitLogin() {
 
 // ── 패널 열기 ──
 function openAdminPanel() {
-  document.getElementById('adminLoginBg').style.display = 'none';
-  document.getElementById('adminPanel').style.display = 'flex';
+  document.getElementById('adminLoginBg').classList.remove('adm-open');
+  document.getElementById('adminPanel').classList.add('adm-open');
   updateGithubBtn();
   renderAdmList();
 }
@@ -2148,9 +2145,9 @@ function githubSync() {
     document.getElementById('gh-owner').value = cfg.owner || '';
     document.getElementById('gh-repo').value  = cfg.repo  || '';
     document.getElementById('gh-token').value = cfg.token ? '••••••••••' : '';
-    panel.style.display = 'block';
+    panel.classList.add('adm-open');
   } else {
-    panel.style.display = 'none';
+    panel.classList.remove('adm-open');
   }
 }
 
@@ -2164,7 +2161,7 @@ function saveGithubSettings() {
   if (!owner || !repo || !token) { alert('모든 항목을 입력해주세요.'); return; }
 
   localStorage.setItem(GH_KEY, JSON.stringify({ owner, repo, token }));
-  document.getElementById('githubPanel').style.display = 'none';
+  document.getElementById('githubPanel').classList.remove('adm-open');
   updateGithubBtn();
   showToast('GitHub 연동 설정 완료! ✅');
 }
@@ -2174,7 +2171,7 @@ function clearGithubSettings() {
   document.getElementById('gh-owner').value = '';
   document.getElementById('gh-repo').value  = '';
   document.getElementById('gh-token').value = '';
-  document.getElementById('githubPanel').style.display = 'none';
+  document.getElementById('githubPanel').classList.remove('adm-open');
   updateGithubBtn();
   showToast('GitHub 연동이 해제되었습니다.');
 }
