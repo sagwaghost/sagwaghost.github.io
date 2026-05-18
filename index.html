@@ -81,6 +81,14 @@
     color: rgba(255,255,255,0.9); font-size: 12px; font-weight: 500;
     padding: 6px 14px; border-radius: 100px;
   }
+  .hero-chip-insta {
+    display: inline-flex; align-items: center; gap: 5px;
+    text-decoration: none; cursor: pointer;
+    transition: background 0.2s;
+  }
+  .hero-chip-insta:hover { background: rgba(255,255,255,0.28); }
+
+
 
   /* ── NOTICE ── */
   .notice-banner {
@@ -399,16 +407,7 @@
   .insta-link-text strong { font-size: 15px; font-weight: 700; color: var(--green); }
   .insta-link-arrow { font-size: 18px; color: var(--gray-400); }
 
-  .footer-insta {
-    display: inline-flex; align-items: center; gap: 6px;
-    color: var(--green); font-size: 13px; font-weight: 600;
-    text-decoration: none; margin-top: 10px;
-    padding: 7px 14px; border: 1.5px solid var(--green-border);
-    border-radius: 100px; background: var(--green-pale);
-    transition: background 0.2s;
-  }
-  .footer-insta:hover { background: var(--green-light); }
-  .footer-insta svg { width: 15px; height: 15px; flex-shrink: 0; }
+  .footer-insta { display: none; }
 
   /* ── ACCOUNT COLLAPSIBLE ── */
   .pay-amount-box {
@@ -484,8 +483,12 @@
     <span class="hero-chip">택배 가능 (배송비 별도)</span>
     <span class="hero-chip">직거래 가능 (문의)</span>
     <span class="hero-chip">교환 및 환불은 불가합니다</span>
+    <a class="hero-chip hero-chip-insta" href="https://instagram.com/sayuscene" target="_blank" rel="noopener">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+      @sayuscene
+    </a>
   </div>
-  <button class="hero-inquiry-btn" onclick="openInquirySheet()">💬 문의하기</button>
+  <button class="hero-inquiry-btn" onclick="openGform('inquiry')">💬 문의하기</button>
 </section>
 
 <div class="notice-banner">
@@ -518,10 +521,6 @@
 <footer class="page-footer">
   <p>© 2026 sayuscene 중고 다구 판매 페이지</p>
   <p>문의 전 상품 상세 내용을 꼭 확인해 주세요.</p>
-  <a class="footer-insta" href="https://instagram.com/sayuscene" target="_blank" rel="noopener">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
-    @sayuscene
-  </a>
 </footer>
 
 <div class="bottom-bar" id="bottomBar">
@@ -788,15 +787,15 @@ function openDetail(id) {
       <div class="detail-rows">${rows}</div>
       <div style="text-align:center;padding:4px 20px 16px;color:var(--gray-400);font-size:14px">판매가 완료된 상품입니다.</div>
       <div class="btn-row">
-        <button class="outline-btn" onclick="openInquirySheet('${currentItem.name.replace(/'/g,"\\'")}')">💬 비슷한 물건 문의하기</button>
+        <button class="outline-btn" onclick="openGform('inquiry','${currentItem.name.replace(/'/g,"\\'")}')">💬 비슷한 물건 문의하기</button>
       </div>`;
   } else {
     document.getElementById('sheetBody').innerHTML = `
       ${carousel}
       <div class="detail-rows">${rows}</div>
       <div class="btn-row">
-        <button class="outline-btn" onclick="openInquirySheet('${currentItem.name.replace(/'/g,"\\'")}')">💬 문의</button>
-        <button class="submit-btn" onclick="openPurchaseForm()">💳 구매 신청</button>
+        <button class="outline-btn" onclick="openGform('inquiry','${currentItem.name.replace(/'/g,"\\'")}')">💬 문의</button>
+        <button class="submit-btn" onclick="openGform('purchase')">💳 구매 신청</button>
       </div>
       <p style="font-size:12px;color:var(--gray-400);text-align:center;margin-top:10px;padding:0 20px">신청 후 계좌로 입금하시면 발송됩니다.</p>`;
   }
@@ -841,20 +840,20 @@ function openPurchaseForm() {
       </div>
       <div class="form-group">
         <label class="form-label">이름 *</label>
-        <input class="form-input" id="adm_f_name" type="text" placeholder="홍길동">
+        <input class="form-input" id="f-buyer-name" type="text" placeholder="홍길동">
       </div>
       <div class="form-group">
         <label class="form-label">연락처 *</label>
-        <input class="form-input" id="f-phone" type="tel" placeholder="010-0000-0000">
+        <input class="form-input" id="f-buyer-phone" type="tel" placeholder="010-0000-0000">
       </div>
       <div class="form-group">
         <label class="form-label">배송 주소 *</label>
-        <input class="form-input" id="f-addr1" type="text" placeholder="도로명 주소" style="margin-bottom:8px">
-        <input class="form-input" id="f-addr2" type="text" placeholder="상세 주소 (동/호수 등)">
+        <input class="form-input" id="f-buyer-addr1" type="text" placeholder="도로명 주소" style="margin-bottom:8px">
+        <input class="form-input" id="f-buyer-addr2" type="text" placeholder="상세 주소 (동/호수 등)">
       </div>
       <div class="form-group">
         <label class="form-label">메모 (선택)</label>
-        <textarea class="form-textarea" id="f-memo" placeholder="배송 요청사항 등"></textarea>
+        <textarea class="form-textarea" id="f-buyer-memo" placeholder="배송 요청사항 등"></textarea>
       </div>
       <button class="submit-btn" id="submitBtn" onclick="submitForm()">신청 완료</button>
       <p style="font-size:12px;color:var(--gray-400);text-align:center;margin-top:10px;margin-bottom:4px">입금 확인 후 발송됩니다.</p>
@@ -898,11 +897,11 @@ function toggleAccount() {
 }
 
 function submitForm() {
-  const name  = (document.getElementById('f-name')?.value||'').trim();
-  const phone = (document.getElementById('f-phone')?.value||'').trim();
-  const addr1 = (document.getElementById('f-addr1')?.value||'').trim();
-  const addr2 = (document.getElementById('f-addr2')?.value||'').trim();
-  const memo  = (document.getElementById('f-memo')?.value||'').trim();
+  const name  = (document.getElementById('f-buyer-name')?.value||'').trim();
+  const phone = (document.getElementById('f-buyer-phone')?.value||'').trim();
+  const addr1 = (document.getElementById('f-buyer-addr1')?.value||'').trim();
+  const addr2 = (document.getElementById('f-buyer-addr2')?.value||'').trim();
+  const memo  = (document.getElementById('f-buyer-memo')?.value||'').trim();
   if (!name || !phone || !addr1) { showToast('이름, 연락처, 주소를 입력해 주세요.'); return; }
   const totalPrice = currentItem.price + 4000;
 
@@ -921,7 +920,7 @@ function submitForm() {
     '메모: ' + (memo || '없음'),
   ].join('\n');
 
-  window.location.href = 'mailto:' + _e + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+  window.open('mailto:' + _e + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body), '_self');
   showSuccess();
 }
 
@@ -986,7 +985,7 @@ function submitInquiry() {
     msg,
   ].join('\n');
 
-  window.location.href = 'mailto:' + _e + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+  window.open('mailto:' + _e + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body), '_self');
   showInquirySuccess();
 }
 
@@ -1013,6 +1012,18 @@ function closeSheet() {
 function handleOverlayClick(e) {
   if (e.target === document.getElementById('sheetOverlay')) closeSheet();
 }
+
+// ── Google Forms 모달 ──────────────────────────
+const GFORM_INQUIRY  = 'https://forms.gle/m2Qp5N6LcaodB7wC6';
+const GFORM_PURCHASE = 'https://forms.gle/3ENwhJdWWCg7MnDh8';
+
+function openGform(type) {
+  const isInquiry = type === 'inquiry';
+  const url = isInquiry ? GFORM_INQUIRY : GFORM_PURCHASE;
+  window.open(url, '_blank', 'noopener,noreferrer');
+}
+
+function closeGform() { /* no-op */ }
 
 function showToast(msg) {
   const t = document.getElementById('toast');
@@ -1228,12 +1239,12 @@ renderItems();
 .adm-header {
   background: var(--green); padding: 14px 20px;
   display: flex; align-items: center; justify-content: space-between;
-  flex-shrink: 0;
+  flex-shrink: 0; gap: 10px;
 }
-.adm-header-left { display: flex; align-items: center; gap: 10px; }
-.adm-header-logo { font-size: 22px; }
-.adm-header-title { font-size: 16px; font-weight: 700; color: #fff; }
-.adm-header-right { display: flex; gap: 8px; align-items: center; }
+.adm-header-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.adm-header-logo { font-size: 22px; flex-shrink: 0; }
+.adm-header-title { font-size: 16px; font-weight: 700; color: #fff; white-space: nowrap; }
+.adm-header-right { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
 .adm-export-btn {
   background: #fff; color: var(--green); border: none;
   font-family: var(--font); font-size: 12px; font-weight: 700;
@@ -1323,10 +1334,16 @@ renderItems();
 .adm-status-dot.sold     { background: var(--gray-400); }
 
 /* ── FORM ── */
-.adm-form-wrap { padding: 20px; max-width: 600px; }
+.adm-form-wrap { padding: 20px; max-width: 600px; width: 100%; margin: 0 auto; }
+@media (max-width: 480px) {
+  .adm-field-row { flex-direction: column; gap: 0; }
+  .adm-field-row .adm-field { margin-bottom: 14px; }
+  .adm-export-btn { font-size: 11px; padding: 7px 10px; }
+  .adm-header-title { font-size: 14px; }
+}
 .adm-form-title { font-size: 17px; font-weight: 700; color: var(--black); margin-bottom: 20px; }
 .adm-field { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; }
-.adm-field-row { display: flex; gap: 12px; margin-bottom: 14px; }
+.adm-field-row { display: flex; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
 .adm-field { margin-bottom: 14px; }
 .adm-field-row .adm-field { margin-bottom: 0; }
 .adm-label { font-size: 12px; font-weight: 600; color: var(--gray-600); }
@@ -1515,6 +1532,7 @@ function renderAdmList() {
         <button class="adm-del-btn"  onclick="deleteItem(${idx})" title="삭제">🗑️</button>
       </div>
     </div>`).join('');
+  setTimeout(initTouchDrag, 50);
 }
 
 function onDragStart(e, idx) {
@@ -1545,6 +1563,69 @@ function onDragEnd() {
   document.querySelectorAll('.adm-item-row').forEach(el => {
     el.classList.remove('adm-dragging', 'adm-drag-over');
   });
+}
+
+// ── 모바일 터치 드래그 ──
+let touchDragSrc = null;
+let touchDragSrcIdx = null;
+let touchClone = null;
+
+function initTouchDrag() {
+  const list = document.getElementById('admItemList');
+  if (!list) return;
+
+  list.addEventListener('touchstart', e => {
+    const handle = e.target.closest('.adm-drag-handle');
+    if (!handle) return;
+    const row = handle.closest('.adm-item-row');
+    if (!row) return;
+    touchDragSrc = row;
+    touchDragSrcIdx = parseInt(row.dataset.idx);
+
+    // 클론 생성
+    touchClone = row.cloneNode(true);
+    touchClone.style.cssText = `position:fixed;left:${row.getBoundingClientRect().left}px;top:${row.getBoundingClientRect().top}px;width:${row.offsetWidth}px;opacity:0.8;z-index:9999;pointer-events:none;background:#fff;box-shadow:0 8px 24px rgba(0,0,0,0.2);border-radius:8px;`;
+    document.body.appendChild(touchClone);
+    row.style.opacity = '0.3';
+    e.preventDefault();
+  }, { passive: false });
+
+  list.addEventListener('touchmove', e => {
+    if (!touchClone) return;
+    const touch = e.touches[0];
+    touchClone.style.top = (touch.clientY - touchClone.offsetHeight / 2) + 'px';
+
+    // 현재 터치 위치 아래 요소 찾기
+    touchClone.style.display = 'none';
+    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+    touchClone.style.display = '';
+    document.querySelectorAll('.adm-item-row').forEach(r => r.classList.remove('adm-drag-over'));
+    const targetRow = el?.closest('.adm-item-row');
+    if (targetRow && targetRow !== touchDragSrc) targetRow.classList.add('adm-drag-over');
+    e.preventDefault();
+  }, { passive: false });
+
+  list.addEventListener('touchend', e => {
+    if (!touchClone) return;
+    touchClone.remove(); touchClone = null;
+    if (touchDragSrc) touchDragSrc.style.opacity = '';
+
+    const touch = e.changedTouches[0];
+    document.querySelectorAll('.adm-item-row').forEach(r => r.classList.remove('adm-drag-over'));
+    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+    const targetRow = el?.closest('.adm-item-row');
+    if (targetRow && targetRow !== touchDragSrc) {
+      const targetIdx = parseInt(targetRow.dataset.idx);
+      if (!isNaN(touchDragSrcIdx) && !isNaN(targetIdx) && touchDragSrcIdx !== targetIdx) {
+        const moved = items.splice(touchDragSrcIdx, 1)[0];
+        items.splice(targetIdx, 0, moved);
+        saveStoredItems(items);
+        renderItems();
+        renderAdmList();
+      }
+    }
+    touchDragSrc = null; touchDragSrcIdx = null;
+  }, { passive: false });
 }
 
 // ── 수정 ──
