@@ -1208,7 +1208,12 @@ function closeGform() { /* no-op */ }
 function hardRefresh() {
   const btn = document.querySelector('.topbar-refresh-btn');
   if (btn) btn.classList.add('spinning');
-  setTimeout(() => { window.location.reload(); }, 300);
+  // 캐시 무시하고 서버에서 새로 요청 (모바일 포함)
+  setTimeout(() => {
+    fetch(window.location.href, { cache: 'no-store' })
+      .then(() => window.location.reload())
+      .catch(() => window.location.reload());
+  }, 300);
 }
 
 function showToast(msg) {
