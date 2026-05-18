@@ -2463,9 +2463,10 @@ function githubUploadAsync() {
   if (syncBtn) syncBtn.classList.add('syncing');
   showToast('GitHub에 업로드 중... ⏳');
   setTimeout(() => {
-    pushItemsToGitHub().then(ok => {
+    const html = getUpdatedHTML();
+    pushToGitHub(html).then(ok => {
       if (syncBtn) syncBtn.classList.remove('syncing');
-      showToast(ok ? '✅ 동기화 완료! 모든 기기에 반영됩니다.' : '⚠️ GitHub 업로드 실패. 설정을 확인해주세요.');
+      showToast(ok ? '✅ 동기화 완료! 1~2분 후 모든 기기 반영.' : '⚠️ GitHub 업로드 실패. 설정을 확인해주세요.');
     }).catch(() => {
       if (syncBtn) syncBtn.classList.remove('syncing');
       showToast('⚠️ GitHub 업로드 실패.');
@@ -2498,18 +2499,29 @@ function loadItemsFromGitHub() {
 }
 
 async function pushToGitHub(htmlContent) {
-  // HTML 전체 push는 내보내기용으로만 유지 (동기화는 items-data.js 사용)
   const cfg = loadGithubConfig();
   if (!cfg.token) return false;
   const { owner, repo, token } = cfg;
-  const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/index.html`;
+  const base = `https://api.github.com/repos/${owner}/${repo}`;
+  const headers = {
+    'Authorization': `token ${token}`,
+    'Accept': 'application/vnd.github.v3+json',
+    'Content-Type': 'application/json'
+  };
+
   try {
-    const getResp = await fetch(apiUrl, {
-      headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
-    });
-    if (!getResp.ok) return false;
-    const fileData = await getResp.json();
-    const sha = fileData.sha;
+    // 1. 현재 브랜치 SHA
+    const refResp = await fetch(`${base}/git/ref/heads/main`, { headers });
+    if (!refResp.ok) throw new Error('ref 조회 실패');
+    const refData = await refResp.json();
+    const commitSha = refData.object.sha;
+
+    // 2. 현재 커밋의 트리 SHA
+    const commitResp = await fetch(`${base}/git/commits/${commitSha}`, { headers });
+    const commitData = await commitResp.json();
+    const treeSha = commitData.tree.sha;
+
+    // 3. 파일을 blob으로 업로드 (크기 제한 없음)
     const encoded = await new Promise((resolve, reject) => {
       const blob = new Blob([htmlContent], { type: 'text/html' });
       const reader = new FileReader();
@@ -2517,20 +2529,48 @@ async function pushToGitHub(htmlContent) {
       reader.onerror = reject;
       reader.readAsDataURL(blob);
     });
-    const putResp = await fetch(apiUrl, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `token ${token}`,
-        'Accept': 'application/vnd.github.v3+json',
-        'Content-Type': 'application/json'
-      },
+
+    const blobResp = await fetch(`${base}/git/blobs`, {
+      method: 'POST', headers,
+      body: JSON.stringify({ content: encoded, encoding: 'base64' })
+    });
+    if (!blobResp.ok) throw new Error('blob 생성 실패');
+    const blobData = await blobResp.json();
+
+    // 4. 새 트리 생성
+    const treeResp = await fetch(`${base}/git/trees`, {
+      method: 'POST', headers,
       body: JSON.stringify({
-        message: `코드 업데이트 ${new Date().toLocaleString('ko-KR')}`,
-        content: encoded, sha
+        base_tree: treeSha,
+        tree: [{ path: 'index.html', mode: '100644', type: 'blob', sha: blobData.sha }]
       })
     });
-    return putResp.ok;
-  } catch(e) { return false; }
+    if (!treeResp.ok) throw new Error('tree 생성 실패');
+    const newTree = await treeResp.json();
+
+    // 5. 새 커밋 생성
+    const newCommitResp = await fetch(`${base}/git/commits`, {
+      method: 'POST', headers,
+      body: JSON.stringify({
+        message: `상품 업데이트 ${new Date().toLocaleString('ko-KR')}`,
+        tree: newTree.sha,
+        parents: [commitSha]
+      })
+    });
+    if (!newCommitResp.ok) throw new Error('commit 생성 실패');
+    const newCommit = await newCommitResp.json();
+
+    // 6. 브랜치 업데이트
+    const updateResp = await fetch(`${base}/git/refs/heads/main`, {
+      method: 'PATCH', headers,
+      body: JSON.stringify({ sha: newCommit.sha })
+    });
+    return updateResp.ok;
+
+  } catch(e) {
+    console.error('GitHub push 오류:', e);
+    return false;
+  }
 }
 
 function getUpdatedHTML() {
