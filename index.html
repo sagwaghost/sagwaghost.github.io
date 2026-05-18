@@ -1038,8 +1038,8 @@ document.addEventListener('keydown', e => {
 });
 
 renderItems();
-// GitHub에서 최신 상품 데이터 자동 로드 (모든 기기 동기화)
-loadItemsFromGitHub();
+// GitHub에서 최신 상품 데이터 자동 로드 (모든 스크립트 로드 후 실행)
+setTimeout(() => { if(typeof loadItemsFromGitHub === 'function') loadItemsFromGitHub(); }, 0);
 </script>
 
 <!-- ════════════════════════════════════════
