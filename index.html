@@ -1205,15 +1205,20 @@ function openGform(type) {
 
 function closeGform() { /* no-op */ }
 
-function hardRefresh() {
+async function hardRefresh() {
   const btn = document.querySelector('.topbar-refresh-btn');
-  if (btn) btn.classList.add('spinning');
-  // 캐시 무시하고 서버에서 새로 요청 (모바일 포함)
-  setTimeout(() => {
-    fetch(window.location.href, { cache: 'no-store' })
-      .then(() => window.location.reload())
-      .catch(() => window.location.reload());
-  }, 300);
+  if (btn) { btn.classList.add('spinning'); btn.disabled = true; }
+  try {
+    // 서버에서 최신 HTML 직접 가져와서 페이지 전체 교체 (캐시 완전 무시)
+    const res = await fetch(location.origin + '/', { cache: 'no-store' });
+    const html = await res.text();
+    document.open('text/html', 'replace');
+    document.write(html);
+    document.close();
+  } catch {
+    // 실패 시 그냥 reload
+    location.reload();
+  }
 }
 
 function showToast(msg) {
