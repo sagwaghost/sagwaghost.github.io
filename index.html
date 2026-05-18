@@ -1449,6 +1449,19 @@ renderItems();
 .adm-github-panel-inner { padding: 20px; max-width: 600px; display: flex; flex-direction: column; gap: 12px; }
 .adm-github-title { font-size: 15px; font-weight: 700; color: var(--black); }
 .adm-github-desc { font-size: 13px; color: var(--gray-600); line-height: 1.6; }
+
+/* 모바일 헤더 2줄 레이아웃 */
+@media (max-width: 480px) {
+  .adm-header { flex-wrap: wrap; gap: 8px; padding: 12px 16px; }
+  .adm-header-left { flex: 1; min-width: 0; }
+  .adm-header-right { width: 100%; justify-content: flex-end; }
+  .adm-github-btn { font-size: 11px; padding: 6px 10px; }
+  .adm-export-btn { font-size: 11px; padding: 6px 10px; }
+  .adm-logout-btn { font-size: 11px; padding: 6px 10px; }
+  .adm-item-meta { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; }
+  .adm-item-price { font-size: 12px; white-space: nowrap; }
+  .adm-item-name { font-size: 13px; }
+}
 .adm-export-btn {
   background: #fff; color: var(--green); border: none;
   font-family: var(--font); font-size: 12px; font-weight: 700;
@@ -1667,14 +1680,26 @@ function closeAdminLogin() {
 async function submitLogin() {
   const pw = document.getElementById('loginPw').value;
   if (!pw) { document.getElementById('loginError').textContent = '비밀번호를 입력해주세요.'; return; }
-  const hash = await sha256(pw);
-  const stored = localStorage.getItem(ADM_HASH_KEY);
-  if (hash === stored) {
-    sessionStorage.setItem(ADM_SESSION, '1');
-    openAdminPanel();
-  } else {
-    document.getElementById('loginError').textContent = '비밀번호가 틀렸습니다.';
-    document.getElementById('loginPw').value = '';
+
+  try {
+    const hash = await sha256(pw);
+    const stored = localStorage.getItem(ADM_HASH_KEY);
+    if (hash === stored) {
+      sessionStorage.setItem(ADM_SESSION, '1');
+      openAdminPanel();
+    } else {
+      document.getElementById('loginError').textContent = '비밀번호가 틀렸습니다.';
+      document.getElementById('loginPw').value = '';
+    }
+  } catch(e) {
+    // crypto.subtle 오류 시 직접 비교 fallback
+    const stored = localStorage.getItem(ADM_HASH_KEY);
+    if (stored === ADM_DEFAULT_HASH && pw === '840511') {
+      sessionStorage.setItem(ADM_SESSION, '1');
+      openAdminPanel();
+    } else {
+      document.getElementById('loginError').textContent = '오류가 발생했습니다. 다시 시도해주세요.';
+    }
   }
 }
 
