@@ -991,16 +991,26 @@ const DEFAULT_ITEMS = [
 
 // ── localStorage에서 상품 불러오기 ──────────────
 const ITEMS_KEY = 'sayu_items_v1';
+const VERSION_KEY = 'sayu_data_ver';
+const DATA_VERSION = 1779108966; // 파일 업데이트 시마다 자동 갱신
+
 function loadStoredItems() {
   try {
-    const s = localStorage.getItem(ITEMS_KEY);
-    const arr = s ? JSON.parse(s) : JSON.parse(JSON.stringify(DEFAULT_ITEMS));
-    // hidden 필드 없으면 기본값 false
-    return arr.map(i => ({ hidden: false, ...i }));
+    const storedVer = parseInt(localStorage.getItem(VERSION_KEY) || '0');
+    // 파일이 더 새것이면 localStorage 리셋
+    if (storedVer < DATA_VERSION) {
+      const fresh = JSON.parse(JSON.stringify(DEFAULT_ITEMS));
+      localStorage.setItem(VERSION_KEY, DATA_VERSION);
+      localStorage.setItem(ITEMS_KEY, JSON.stringify(fresh));
+      return fresh;
+    }
+    const stored = JSON.parse(localStorage.getItem(ITEMS_KEY) || '[]');
+    return stored.length > 0 ? stored : JSON.parse(JSON.stringify(DEFAULT_ITEMS));
   } catch { return JSON.parse(JSON.stringify(DEFAULT_ITEMS)); }
 }
 function saveStoredItems(arr) {
   localStorage.setItem(ITEMS_KEY, JSON.stringify(arr));
+  localStorage.setItem(VERSION_KEY, DATA_VERSION);
 }
 let items = loadStoredItems();
 
@@ -2575,13 +2585,21 @@ async function pushToGitHub(htmlContent) {
 
 function getUpdatedHTML() {
   const currentItemsJson = JSON.stringify(items, null, 2);
+  const newVersion = Math.floor(Date.now() / 1000);
   let fullHTML = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+  // 관리자 패널 상태 초기화
   fullHTML = fullHTML
     .replace(/id="adminPanel"\s+style="[^"]*"/g,  'id="adminPanel" style="display:none"')
     .replace(/id="adminOverlay"\s+style="[^"]*"/g, 'id="adminOverlay" style="display:none"')
     .replace(/id="adminLoginBg"\s+style="[^"]*"/g, 'id="adminLoginBg" style="display:none"')
     .replace(/id="githubPanel"\s+style="[^"]*"/g,  'id="githubPanel" style="display:none"')
     .replace(/class="([^"]*?)adm-open([^"]*?)"/g,  'class="$1$2"');
+  // DATA_VERSION 갱신 (저장할 때마다 자동 업데이트)
+  fullHTML = fullHTML.replace(
+    /const DATA_VERSION = \d+;/,
+    `const DATA_VERSION = ${newVersion};`
+  );
+  // DEFAULT_ITEMS 교체
   const MARKER = 'const DEFAULT_ITEMS = ';
   const si = fullHTML.indexOf(MARKER);
   if (si !== -1) {
